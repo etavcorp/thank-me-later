@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global base styles to ensure the dark/modern theme is consistent */
+html, body {
+  @apply bg-zinc-950 text-zinc-300;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+}
