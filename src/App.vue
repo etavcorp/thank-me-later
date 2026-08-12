@@ -21,7 +21,6 @@
             </button>
           </div>
                   <div class="hidden md:flex space-x-8">
-                      <router-link to="/" class="hover:text-brand-500 transition-colors" exact-active-class="font-semibold gold-glow">Home</router-link>
                       <router-link to="/about" class="hover:text-brand-500 transition-colors" exact-active-class="font-semibold gold-glow">About</router-link>
                       <router-link to="/pricing" class="hover:text-brand-500 transition-colors" exact-active-class="font-semibold gold-glow">Menu</router-link>
                       <router-link to="/booking" class="hover:text-brand-500 transition-colors" exact-active-class="font-semibold gold-glow">Book Event</router-link>
@@ -51,7 +50,6 @@
                 </header>
 
                 <nav class="mt-10 px-4 space-y-1 flex-1">
-                  <router-link ref="firstLink" tabindex="0" @click="mobileOpen = false" to="/" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Home</router-link>
                   <router-link @click="mobileOpen = false" to="/about" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">About</router-link>
                   <router-link @click="mobileOpen = false" to="/pricing" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Menu</router-link>
                   <router-link @click="mobileOpen = false" to="/booking" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Book Event</router-link>
