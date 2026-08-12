@@ -359,6 +359,49 @@ const featuredDishes = ref([
     min-height: 92vh;
   }
 
+  .hero-copy {
+    max-width: 100%;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.12em;
+    font-size: 0.62rem;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+    line-height: 1.04;
+    letter-spacing: -0.05em;
+    text-shadow: 0 2px 28px rgba(0, 0, 0, 0.38);
+  }
+
+  .hero-copy p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .hero-meta {
+    gap: 0.8rem;
+  }
+
+  .hero-meta div {
+    min-width: 100px;
+  }
+
+  .hero-meta strong {
+    font-size: 1rem;
+  }
+
+  .hero-card {
+    padding: 1.15rem 1.1rem 0.95rem;
+    border-radius: 22px;
+  }
+
+  .hero-card h2 {
+    font-size: 2rem;
+  }
+
   .cta-row {
     flex-direction: column;
   }
