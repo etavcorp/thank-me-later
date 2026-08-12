@@ -8,4 +8,19 @@ html, body {
   margin: 0;
   padding: 0;
   scroll-behavior: smooth;
+  background:
+    radial-gradient(circle at top, rgba(245, 158, 11, 0.1), transparent 30%),
+    #09090b;
+}
+
+body {
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
 }

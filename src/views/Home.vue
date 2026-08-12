@@ -1,29 +1,64 @@
 <template>
-  <div>
-    <!-- Hero Section -->
-    <section class="relative h-screen flex items-center justify-center overflow-hidden">
-      <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1606625736768-0fa2eebf0991?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center opacity-30"></div>
-      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent"></div>
-      
-      <div class="relative z-10 text-center px-4 max-w-4xl mx-auto" v-fade-scroll>
-        <h1 class="text-5xl md:text-7xl font-serif text-white mb-6 leading-tight">Elevated Soul Food Experience</h1>
-        <p class="text-xl md:text-2xl text-zinc-400 mb-10 font-light">Crafted by Chef Vince Mogul — elevated soul food, rich flavor, and unforgettable hospitality.</p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <router-link to="/pricing" class="inline-flex items-center justify-center px-8 py-4 rounded-full bg-brand-500 text-white font-semibold uppercase tracking-[0.2em] text-sm transition-all duration-200 hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-zinc-950 w-full sm:w-[220px]">Menu</router-link>
-          <router-link to="/booking" class="inline-flex items-center justify-center px-8 py-4 rounded-full border border-zinc-700 bg-zinc-900/50 text-white font-semibold uppercase tracking-[0.2em] text-sm transition-all duration-200 hover:border-brand-500 hover:text-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-zinc-950 w-full sm:w-[220px]">Book Catering</router-link>
+  <div class="home-page">
+    <section class="hero-panel">
+      <div class="hero-backdrop" aria-hidden="true"></div>
+      <div class="hero-glow hero-glow-left" aria-hidden="true"></div>
+      <div class="hero-glow hero-glow-right" aria-hidden="true"></div>
+
+      <div class="hero-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" v-fade-scroll>
+        <div class="hero-copy">
+          <span class="eyebrow">Chef Vince Mogul • Catering & events</span>
+          <h1>Elevated soul food for memorable gatherings.</h1>
+          <p>
+            From intimate gatherings to grand celebrations, we bring rich flavor,
+            polished presentation, and heartfelt hospitality to every table.
+          </p>
+
+          <div class="cta-row">
+            <router-link to="/pricing" class="primary-btn">View menu</router-link>
+            <router-link to="/booking" class="secondary-btn">Book catering</router-link>
+          </div>
+
+          <div class="hero-meta">
+            <div>
+              <strong>120+</strong>
+              <span>events hosted</span>
+            </div>
+            <div>
+              <strong>5-star</strong>
+              <span>guest experience</span>
+            </div>
+            <div>
+              <strong>Custom</strong>
+              <span>menu styling</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-card" aria-label="Featured catering highlight">
+          <div class="card-badge">Chef’s favorite</div>
+          <h2>Signature Feast</h2>
+          <ul>
+            <li>Marinated grilled lamb chops</li>
+            <li>Crispy fried chicken</li>
+            <li>Five-cheese baked mac & cheese</li>
+          </ul>
+          <div class="card-footer">
+            <span>Curated for intimate, elevated dining</span>
+            <span class="dot"></span>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Signature Dishes -->
     <section class="py-24 bg-zinc-950">
       <div class="max-w-7xl mx-auto px-4" v-fade-scroll>
         <h2 class="text-4xl font-serif text-white text-center mb-16">Signature <span class="text-brand-500">Classics</span></h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div v-for="dish in featuredDishes" :key="dish.name" class="group cursor-pointer">
-            <div class="overflow-hidden relative mb-4">
+          <div v-for="dish in featuredDishes" :key="dish.name" class="group cursor-pointer dish-card">
+            <div class="overflow-hidden relative mb-4 rounded-[28px]">
               <img :src="dish.image" :alt="dish.name" class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-700">
-              <div class="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500"></div>
+              <div class="absolute inset-0 bg-black/25 group-hover:bg-transparent transition-colors duration-500"></div>
             </div>
             <h3 class="text-2xl font-serif text-white">{{ dish.name }}</h3>
             <p class="text-zinc-500 mt-2">{{ dish.desc }}</p>
@@ -32,17 +67,14 @@
       </div>
     </section>
 
-   <!-- Live IG Feed -->
     <section class="py-24 bg-zinc-900 border-y border-zinc-800">
       <div class="max-w-7xl mx-auto px-4 text-center" v-fade-scroll>
         <h2 class="text-3xl font-serif text-white mb-4">Follow The Journey</h2>
         <a href="https://www.instagram.com/thankmelater_catering/" target="_blank" class="text-brand-500 hover:text-brand-400 transition-colors mb-12 inline-block tracking-wide">
           @thankmelater_catering
         </a>
-        
-        <!-- ACTUAL ELFSIGHT WIDGET DISPLAY -->
+
         <div class="elfsight-app-b2e69077-77b2-483b-85ab-a54e62b58e69" data-elfsight-app-lazy></div>
-        
       </div>
     </section>
   </div>
@@ -57,3 +89,283 @@ const featuredDishes = ref([
   { name: 'Signature Mac & Cheese', desc: 'Baked five-cheese blend with a perfectly crisp top layer.', image: 'https://pinkowlkitchen.com/wp-content/uploads/2025/05/Creamy-southern-baked-Mac-and-cheese-on-spoon.jpg' }
 ])
 </script>
+
+<style scoped>
+.home-page {
+  background: #09090b;
+}
+
+.hero-panel {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background:
+    linear-gradient(120deg, rgba(9, 9, 11, 0.84) 0%, rgba(9, 9, 11, 0.7) 34%, rgba(9, 9, 11, 0.2) 100%),
+    url('https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1800&q=80') center/cover no-repeat;
+}
+
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(245, 158, 11, 0.2), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.14), transparent 25%);
+}
+
+.hero-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(70px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.hero-glow-left {
+  width: 320px;
+  height: 320px;
+  left: 8%;
+  top: 18%;
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.hero-glow-right {
+  width: 420px;
+  height: 420px;
+  right: 10%;
+  bottom: 12%;
+  background: rgba(251, 191, 36, 0.12);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  align-items: center;
+  gap: 2rem;
+  padding-top: 7rem;
+  padding-bottom: 4rem;
+}
+
+.hero-copy {
+  max-width: 720px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.52rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  background: rgba(24, 24, 27, 0.45);
+  backdrop-filter: blur(10px);
+  color: #fbbf24;
+  font-size: 0.72rem;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.hero-copy h1 {
+  margin: 1.2rem 0 1rem;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3.3rem, 5vw, 6rem);
+  line-height: 0.94;
+  letter-spacing: -0.06em;
+  color: #fff;
+  max-width: 660px;
+}
+
+.hero-copy p {
+  margin: 0;
+  max-width: 620px;
+  color: rgba(244, 244, 245, 0.76);
+  font-size: clamp(1.08rem, 1.8vw, 1.5rem);
+  line-height: 1.7;
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.primary-btn,
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 210px;
+  padding: 1rem 1.6rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.74rem;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.primary-btn {
+  color: #101010;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 18px 40px rgba(245, 158, 11, 0.32);
+}
+
+.secondary-btn {
+  color: #fff;
+  background: rgba(17, 17, 20, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+}
+
+.primary-btn:hover,
+.secondary-btn:hover {
+  transform: translateY(-2px);
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin-top: 2.4rem;
+}
+
+.hero-meta div {
+  min-width: 120px;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.hero-meta strong {
+  display: block;
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.hero-meta span {
+  display: block;
+  color: rgba(244, 244, 245, 0.65);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 0.4rem;
+}
+
+.hero-card {
+  justify-self: end;
+  width: min(100%, 420px);
+  padding: 1.5rem 1.5rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 30px;
+  background: rgba(24, 24, 27, 0.52);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.26);
+}
+
+.card-badge {
+  display: inline-block;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-radius: 9999px;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+.hero-card h2 {
+  margin: 1rem 0 1.1rem;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 3vw, 3rem);
+  color: white;
+}
+
+.hero-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.hero-card li {
+  position: relative;
+  padding-left: 1.4rem;
+  color: rgba(244, 244, 245, 0.82);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.hero-card li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.65rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fbbf24;
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.7);
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(244, 244, 245, 0.7);
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.7);
+}
+
+.dish-card {
+  border-radius: 28px;
+  padding: 0.75rem;
+  background: rgba(17, 17, 17, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 900px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    padding-top: 7.5rem;
+  }
+
+  .hero-card {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-panel {
+    min-height: 92vh;
+  }
+
+  .cta-row {
+    flex-direction: column;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+  }
+}
+</style>
