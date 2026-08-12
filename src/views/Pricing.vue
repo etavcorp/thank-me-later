@@ -12,14 +12,14 @@
           <span class="text-brand-500 font-semibold text-lg">${{ item.price }}</span>
         </div>
         <p class="text-zinc-500 font-light mb-4">{{ item.desc }}</p>
-        <button class="text-sm uppercase tracking-wider text-white border border-zinc-700 px-4 py-2 hover:bg-brand-500 hover:border-brand-500 transition-colors">Add to Order</button>
       </div>
     </div>
     
-    <div class="mt-20 text-center bg-zinc-900 p-12 border border-zinc-800" v-fade-scroll>
-      <h2 class="text-3xl font-serif text-white mb-4">Planning a large event?</h2>
-      <p class="text-zinc-400 mb-8">For weddings, corporate lunches, and large gatherings, we require customized quoting.</p>
-      <router-link to="/booking" class="px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-sm transition-all uppercase tracking-widest text-sm">Request Catering Quote</router-link>
+    <div class="mt-20 rounded-[28px] border border-zinc-800 bg-zinc-900/80 shadow-2xl shadow-black/30 p-8 md:p-12 text-center" v-fade-scroll>
+      <p class="text-xs uppercase tracking-[0.35em] text-brand-400 mb-4">Custom quoting</p>
+      <h2 class="text-3xl md:text-4xl font-serif text-white mb-4">Planning a large event?</h2>
+      <p class="max-w-2xl mx-auto text-zinc-400 mb-8 leading-relaxed">For weddings, corporate lunches, and large gatherings, we require a customized quote to match your guest count, menu, and event details.</p>
+      <router-link to="/booking" class="inline-block rounded-full bg-brand-500 px-8 py-4 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-all duration-200 hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-zinc-950">Request Catering Quote</router-link>
     </div>
   </section>
 </template>
@@ -28,11 +28,11 @@
 import { ref } from 'vue'
 
 const menuItems = ref([
-  { name: 'Honey Glazed Lamb Chops', price: '35', desc: 'Four tender chops with signature glaze.' },
-  { name: 'Crispy Fried Chicken', price: '22', desc: 'Half-chicken portion, seasoned to perfection.' },
-  { name: 'Pan-Seared Salmon', price: '28', desc: 'Fresh catch with a butter-herb drizzle.' },
-  { name: 'Smothered Turkey Wings', price: '24', desc: 'Slow-cooked until fall-off-the-bone tender.' },
-  { name: 'Baked Mac & Cheese', price: '12', desc: 'Five-cheese blend baked golden brown.' },
-  { name: 'Collard Greens', price: '10', desc: 'Slow-simmered with smoked turkey.' }
+  { name: 'Marinade Grilled Lamb Chops', price: '35', desc: 'Marinated overnight and grilled to medium-rare, finished with a light honey-balsamic glaze.' },
+  { name: 'Crispy Fried Chicken', price: '22', desc: 'Buttermilk-brined and double-dredged, deep-fried until extra-crisp and juicy.' },
+  { name: 'Pan-Seared Salmon', price: '28', desc: 'Skin-on fillet, pan-seared and finished with lemon-butter and fresh herbs.' },
+  { name: 'Smothered Turkey Wings', price: '24', desc: 'Braised low-and-slow in a savory gravy until tender and falling from the bone.' },
+  { name: 'Baked Mac & Cheese', price: '12', desc: 'Creamy five-cheese sauce baked with a golden, crisp breadcrumb topping.' },
+  { name: 'Collard Greens', price: '10', desc: 'Slow-simmered with smoked turkey and aromatics until silky and flavorful.' }
 ])
 </script>

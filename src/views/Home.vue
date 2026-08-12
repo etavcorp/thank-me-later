@@ -7,10 +7,10 @@
       
       <div class="relative z-10 text-center px-4 max-w-4xl mx-auto" v-fade-scroll>
         <h1 class="text-5xl md:text-7xl font-serif text-white mb-6 leading-tight">Elevated Soul Food Experience</h1>
-        <p class="text-xl md:text-2xl text-zinc-400 mb-10 font-light">Curated by Chef Vince Mogul. Dark, sleek, and undeniably delicious.</p>
+        <p class="text-xl md:text-2xl text-zinc-400 mb-10 font-light">Crafted by Chef Vince Mogul — elevated soul food, rich flavor, and unforgettable hospitality.</p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <router-link to="/pricing" class="px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-sm transition-all duration-300 uppercase tracking-widest text-sm">Order Now</router-link>
-          <router-link to="/booking" class="px-8 py-4 border border-zinc-700 hover:border-brand-500 hover:text-brand-500 text-white font-semibold rounded-sm transition-all duration-300 uppercase tracking-widest text-sm">Book Catering</router-link>
+          <router-link to="/pricing" class="px-8 py-4 rounded-full bg-brand-500 text-white font-semibold uppercase tracking-[0.2em] text-sm transition-all duration-200 hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-zinc-950">Menu</router-link>
+          <router-link to="/booking" class="px-8 py-4 rounded-full border border-zinc-700 bg-zinc-900/50 text-white font-semibold uppercase tracking-[0.2em] text-sm transition-all duration-200 hover:border-brand-500 hover:text-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-zinc-950">Book Catering</router-link>
         </div>
       </div>
     </section>
@@ -52,8 +52,8 @@
 import { ref } from 'vue'
 
 const featuredDishes = ref([
-  { name: 'Honey Glazed Lamb Chops', desc: 'Perfectly seared, finished with a warm honey-bourbon glaze.', image: 'https://images.unsplash.com/photo-1603986061386-b48ff2f18320?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' },
-  { name: 'Crispy Fried Chicken', desc: 'Golden, crackling crust with tender, juicy soul flavor inside.', image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' },
-  { name: 'Signature Mac & Cheese', desc: 'Baked five-cheese blend with a perfectly crisp top layer.', image: 'https://images.unsplash.com/photo-1612204078891-105658e6587c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }
+  { name: 'Marinade Grilled Lamb Chops', desc: 'Marinated overnight and grilled to medium-rare with a light honey-balsamic finish.', image: 'https://www.tablefortwoblog.com/wp-content/uploads/2021/07/grilled-lamb-chops-recipe-photo-tablefortwoblog-4-scaled.jpg' },
+  { name: 'Crispy Fried Chicken', desc: 'Golden, crackling crust with tender, juicy soul flavor inside.', image: 'https://grandbaby-cakes.com/wp-content/uploads/2025/08/buttermilk-fried-chicken-15.jpg' },
+  { name: 'Signature Mac & Cheese', desc: 'Baked five-cheese blend with a perfectly crisp top layer.', image: 'https://pinkowlkitchen.com/wp-content/uploads/2025/05/Creamy-southern-baked-Mac-and-cheese-on-spoon.jpg' }
 ])
 </script>

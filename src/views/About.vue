@@ -8,9 +8,9 @@
         <h4 class="text-brand-500 uppercase tracking-widest text-sm mb-2">The Architect of Flavor</h4>
         <h1 class="text-5xl font-serif text-white mb-8">Vince Mogul</h1>
         <div class="space-y-6 text-zinc-400 leading-relaxed font-light text-lg">
-          <p>I started Thank Me Later Catering with one simple mission: to elevate traditional soul food into an upscale, unforgettable culinary experience.</p>
+          <p>I started this catering company with one simple mission: to elevate traditional soul food into an upscale, unforgettable culinary experience.</p>
           <p>Operating as a one-man powerhouse, I oversee every detail. From sourcing the freshest salmon and turkey wings to perfecting the seasoning on my signature fried chicken and lamb chops, quality is never compromised.</p>
-          <p>When you book Thank Me Later, you aren't just getting a catered meal—you are getting my personal dedication to culinary excellence. You'll thank me later.</p>
+          <p>When you book my services, you aren't just getting a catered meal—you are getting my personal dedication to culinary excellence.</p>
         </div>
       </div>
     </div>
