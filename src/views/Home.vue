@@ -67,14 +67,27 @@
       </div>
     </section>
 
-    <section class="py-24 bg-zinc-900 border-y border-zinc-800">
-      <div class="max-w-7xl mx-auto px-4 text-center" v-fade-scroll>
-        <h2 class="text-3xl font-serif text-white mb-4">Follow The Journey</h2>
-        <a href="https://www.instagram.com/thankmelater_catering/" target="_blank" class="text-brand-500 hover:text-brand-400 transition-colors mb-12 inline-block tracking-wide">
-          @thankmelater_catering
-        </a>
+    <section class="instagram-section" v-fade-scroll>
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="instagram-header">
+          <div>
+            <span class="instagram-badge">Instagram</span>
+            <h2>Follow The Journey</h2>
+          </div>
 
-        <div class="elfsight-app-b2e69077-77b2-483b-85ab-a54e62b58e69" data-elfsight-app-lazy></div>
+          <a
+            href="https://www.instagram.com/thankmelater_catering/"
+            target="_blank"
+            rel="noreferrer"
+            class="instagram-link"
+          >
+            @thankmelater_catering
+          </a>
+        </div>
+
+        <div class="instagram-shell">
+          <div class="elfsight-app-b2e69077-77b2-483b-85ab-a54e62b58e69" data-elfsight-app-lazy></div>
+        </div>
       </div>
     </section>
   </div>
@@ -342,10 +355,108 @@ const featuredDishes = ref([
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.instagram-section {
+  position: relative;
+  padding: 6rem 0 7rem;
+  background:
+    radial-gradient(circle at top left, rgba(251, 191, 36, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(24, 24, 27, 0.95) 0%, rgba(9, 9, 11, 1) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.instagram-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.instagram-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 9999px;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.instagram-header h2 {
+  margin: 1rem 0 0;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.3rem, 3vw, 3.2rem);
+  color: white;
+}
+
+.instagram-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1.3rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(17, 17, 20, 0.55);
+  color: #fbbf24;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.instagram-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(251, 191, 36, 0.35);
+  box-shadow: 0 14px 30px rgba(251, 191, 36, 0.12);
+}
+
+.instagram-shell {
+  position: relative;
+  padding: 1rem;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(17, 17, 20, 0.72);
+  box-shadow: 0 35px 80px rgba(0, 0, 0, 0.26);
+  overflow: hidden;
+}
+
+.instagram-shell::before {
+  content: '';
+  position: absolute;
+  inset: -25% auto auto -12%;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: rgba(251, 191, 36, 0.11);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.elfsight-app-b2e69077-77b2-483b-85ab-a54e62b58e69 {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(9, 9, 11, 0.4);
+}
+
 @media (max-width: 900px) {
   .hero-content {
     grid-template-columns: 1fr;
     padding-top: 7.5rem;
+  }
+
+  .instagram-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .hero-card {
