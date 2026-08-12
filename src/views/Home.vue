@@ -9,8 +9,8 @@
         <h1 class="text-5xl md:text-7xl font-serif text-white mb-6 leading-tight">Elevated Soul Food Experience</h1>
         <p class="text-xl md:text-2xl text-zinc-400 mb-10 font-light">Crafted by Chef Vince Mogul — elevated soul food, rich flavor, and unforgettable hospitality.</p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <router-link to="/pricing" class="px-8 py-4 rounded-full bg-brand-500 text-white font-semibold uppercase tracking-[0.2em] text-sm transition-all duration-200 hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-zinc-950">Menu</router-link>
-          <router-link to="/booking" class="px-8 py-4 rounded-full border border-zinc-700 bg-zinc-900/50 text-white font-semibold uppercase tracking-[0.2em] text-sm transition-all duration-200 hover:border-brand-500 hover:text-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-zinc-950">Book Catering</router-link>
+          <router-link to="/pricing" class="inline-flex items-center justify-center px-8 py-4 rounded-full bg-brand-500 text-white font-semibold uppercase tracking-[0.2em] text-sm transition-all duration-200 hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-zinc-950 w-full sm:w-[220px]">Menu</router-link>
+          <router-link to="/booking" class="inline-flex items-center justify-center px-8 py-4 rounded-full border border-zinc-700 bg-zinc-900/50 text-white font-semibold uppercase tracking-[0.2em] text-sm transition-all duration-200 hover:border-brand-500 hover:text-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-zinc-950 w-full sm:w-[220px]">Book Catering</router-link>
         </div>
       </div>
     </section>

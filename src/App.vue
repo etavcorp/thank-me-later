@@ -36,7 +36,7 @@
               <div v-show="mobileOpen" @click="mobileOpen = false" class="md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-[9980]"></div>
             </transition>
 
-            <aside role="dialog" aria-modal="true" aria-label="Mobile menu" :aria-hidden="!mobileOpen" class="md:hidden fixed top-0 right-0 h-full w-72 bg-zinc-950/95 border-l border-zinc-800 z-[9999] shadow-2xl rounded-l-2xl ring-1 ring-white/5 transition-transform duration-300 ease-out transform" :class="mobileOpen ? 'translate-x-0' : 'translate-x-full'">
+            <aside role="dialog" aria-modal="true" aria-label="Mobile menu" :aria-hidden="!mobileOpen" class="md:hidden fixed top-0 right-0 h-full w-72 bg-zinc-950/95 border-l border-zinc-800 z-[9999] shadow-2xl rounded-l-2xl ring-1 ring-white/5 transition-transform duration-300 ease-out transform flex flex-col" :class="mobileOpen ? 'translate-x-0' : 'translate-x-full'">
                 <header class="flex items-center justify-between px-4 pt-6 pb-3">
                   <div class="w-full relative">
                     <router-link @click="mobileOpen = false" to="/" class="absolute left-1/2 top-3 transform -translate-x-1/2">
@@ -50,7 +50,7 @@
                   </div>
                 </header>
 
-                <nav class="mt-10 px-4 space-y-1">
+                <nav class="mt-10 px-4 space-y-1 flex-1">
                   <router-link ref="firstLink" tabindex="0" @click="mobileOpen = false" to="/" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Home</router-link>
                   <router-link @click="mobileOpen = false" to="/about" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">About</router-link>
                   <router-link @click="mobileOpen = false" to="/pricing" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Menu</router-link>
@@ -58,8 +58,14 @@
                   <router-link @click="mobileOpen = false" to="/contact" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Contact</router-link>
                 </nav>
 
-                <div class="mt-6 px-4 pt-4 border-t border-zinc-800">
-                  <p class="text-sm text-zinc-400">Need help? <a href="/contact" @click="mobileOpen = false" class="text-brand-400 hover:underline">Contact us</a></p>
+                <div class="px-4 pb-5 mt-auto">
+                  <div class="border-t border-zinc-800 pt-3">
+                    <p class="text-[8px] uppercase tracking-[0.22em] text-zinc-500 text-center flex items-center justify-center gap-1">
+                      <span>Powered by</span>
+                      <span class="font-semibold text-zinc-300">ETAV</span>
+                      <span class="heart-pulse" aria-label="love">♥</span>
+                    </p>
+                  </div>
                 </div>
               </aside>
 
@@ -146,5 +152,51 @@ aside a.router-link-exact-active,
 aside a.router-link-active {
   color: rgb(245 158 11) !important; /* amber-400 */
   text-shadow: 0 0 14px rgba(245,158,11,0.22), 0 0 6px rgba(245,158,11,0.12);
+}
+
+.heart-pulse {
+  display: inline-block;
+  color: #ef4444;
+  font-size: 7px;
+  line-height: 1;
+  vertical-align: middle;
+  animation: heartPulse 1.2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@media (max-width: 767px) {
+  *, *::before, *::after {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:focus,
+  button:focus-visible,
+  a:focus,
+  a:focus-visible,
+  input:focus,
+  input:focus-visible,
+  select:focus,
+  select:focus-visible,
+  textarea:focus,
+  textarea:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+  }
+}
+
+@keyframes heartPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  40% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
 }
 </style>
