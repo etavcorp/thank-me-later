@@ -1,5 +1,6 @@
 export interface Env {
   DB: D1Database;
+  ASSETS?: Fetcher;
 }
 
 const corsHeaders = {
@@ -24,6 +25,25 @@ function getBodyJson<T>(request: Request): Promise<T> {
   return request.json() as Promise<T>;
 }
 
+async function serveAsset(request: Request, env: Env): Promise<Response | null> {
+  if (!env.ASSETS) {
+    return null;
+  }
+
+  const assetResponse = await env.ASSETS.fetch(request);
+  if (assetResponse.status !== 404) {
+    return assetResponse;
+  }
+
+  const fallbackRequest = new Request(new URL("/index.html", request.url), request);
+  const fallbackResponse = await env.ASSETS.fetch(fallbackRequest);
+  if (fallbackResponse.status !== 404) {
+    return fallbackResponse;
+  }
+
+  return null;
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -33,6 +53,13 @@ export default {
         status: 204,
         headers: corsHeaders,
       });
+    }
+
+    if (request.method === "GET" && !url.pathname.startsWith("/api/")) {
+      const assetResponse = await serveAsset(request, env);
+      if (assetResponse) {
+        return assetResponse;
+      }
     }
 
     try {

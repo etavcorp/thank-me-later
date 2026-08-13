@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy:uat": "wrangler deploy --env uat",
-    "deploy:prd": "wrangler deploy --env prd",
+    "deploy:prd": "npm --prefix ../frontend install && npm --prefix ../frontend run build && wrangler deploy --env prd",
     "publish": "wrangler publish"
   },
   "devDependencies": {

@@ -22,6 +22,11 @@ database_id = "b7e782ea-41e0-4122-8831-df236f3a29d5"
 name = "thank-me-later-worker-prd"
 workers_dev = false
 
+[env.prd.assets]
+directory = "../frontend/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
 [[env.prd.d1_databases]]
 binding = "DB"
 database_name = "thank-me-later-db-prd"
