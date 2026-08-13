@@ -130,11 +130,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const API_URL = import.meta.env.VITE_API_URL
-
-if (!API_URL) {
-  throw new Error('Missing VITE_API_URL for this environment. Set the API URL in the matching .env file.')
-}
+const API_URL = import.meta.env.VITE_API_URL?.trim() || new URL('/api/menu', window.location.origin).toString()
 
 const ADMIN_CODE = 'thank-me-later-admin'
 
