@@ -23,5 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 node_modules/
-dist/
+.DS_Store
+Thumbs.db
+node_modules/
+
+# Frontend build output
+/frontend/dist/
+
+# Worker cache / wrangler
+/worker/.wrangler/
+
+# Environment files
 .env
+.env.*
