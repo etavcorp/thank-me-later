@@ -2,10 +2,28 @@ name = "thank-me-later-worker"
 main = "./src/index.ts"
 compatibility_date = "2024-01-01"
 
+# Local development uses a true localhost-only Miniflare D1 instance.
+# The special local id keeps it off Cloudflare and prevents it from appearing in d1 list.
 [[d1_databases]]
 binding = "DB"
-database_name = "thank-me-later-db"
-database_id = "342031e9-c234-4b3c-a1d4-e2448f6d5d1f"
+database_name = "thank-me-later-db-local"
+database_id = "local"
+
+[env.uat]
+name = "thank-me-later-worker-uat"
+
+[[env.uat.d1_databases]]
+binding = "DB"
+database_name = "thank-me-later-db-uat"
+database_id = "b7e782ea-41e0-4122-8831-df236f3a29d5"
+
+[env.prd]
+name = "thank-me-later-worker-prd"
+
+[[env.prd.d1_databases]]
+binding = "DB"
+database_name = "thank-me-later-db-prd"
+database_id = "8fa8dde7-32d6-4c0e-b066-7b9b8e4e5c9c"
 
 [build]
 command = "npm install && npm run build"

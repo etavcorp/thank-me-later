@@ -29,13 +29,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const API_BASE_URLS = {
-  development: 'http://localhost:8787',
-  uat: import.meta.env.VITE_UAT_API_URL || 'https://thank-me-later-uat.etavcorp.workers.dev',
-  production: import.meta.env.VITE_PROD_API_URL || 'https://thank-me-later.etavcorp.workers.dev',
-}
+const API_URL = import.meta.env.VITE_API_URL
 
-const API_URL = import.meta.env.VITE_API_URL || `${API_BASE_URLS[import.meta.env.MODE] || API_BASE_URLS.production}/api/menu`
+if (!API_URL) {
+  throw new Error('Missing VITE_API_URL for this environment. Set the API URL in the matching .env file.')
+}
 
 const menuItems = ref([])
 const loading = ref(true)

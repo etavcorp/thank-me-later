@@ -6,8 +6,30 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "thank-me-later-db",
-      "database_id": "342031e9-c234-4b3c-a1d4-e2448f6d5d1f"
+      "database_name": "thank-me-later-db-local",
+      "database_id": "local"
     }
-  ]
+  ],
+  "env": {
+    "uat": {
+      "name": "thank-me-later-worker-uat",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "thank-me-later-db-uat",
+          "database_id": "b7e782ea-41e0-4122-8831-df236f3a29d5"
+        }
+      ]
+    },
+    "prd": {
+      "name": "thank-me-later-worker-prd",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "thank-me-later-db-prd",
+          "database_id": "8fa8dde7-32d6-4c0e-b066-7b9b8e4e5c9c"
+        }
+      ]
+    }
+  }
 }
