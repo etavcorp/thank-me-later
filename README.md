@@ -49,4 +49,19 @@ npm run dev
 npm run build
 ```
 
+Deployment notes
+
+- Production worker: `thank-me-later-worker-prd`
+- UAT worker: `thank-me-later-worker-uat`
+- Local dev worker: `thank-me-later-db-local` (D1 only)
+
+Run these from the worker directory:
+
+```bash
+npm run deploy:uat
+npm run deploy:prd
+```
+
+The main branch should deploy to the PRD worker and the UAT branch should deploy to the UAT worker. Do not leave duplicate worker names active in Cloudflare.
+
 If you want me to expand any section (detailed file descriptions, component props, or add usage examples), tell me which part to expand.

@@ -11,6 +11,7 @@ database_id = "local"
 
 [env.uat]
 name = "thank-me-later-worker-uat"
+workers_dev = false
 
 [[env.uat.d1_databases]]
 binding = "DB"
@@ -19,6 +20,7 @@ database_id = "b7e782ea-41e0-4122-8831-df236f3a29d5"
 
 [env.prd]
 name = "thank-me-later-worker-prd"
+workers_dev = false
 
 [[env.prd.d1_databases]]
 binding = "DB"

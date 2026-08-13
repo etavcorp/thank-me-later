@@ -13,6 +13,8 @@
   },
   "scripts": {
     "dev": "wrangler dev",
+    "deploy:uat": "wrangler deploy --env uat",
+    "deploy:prd": "wrangler deploy --env prd",
     "publish": "wrangler publish"
   },
   "devDependencies": {
