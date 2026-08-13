@@ -26,6 +26,7 @@ node_modules/
 .DS_Store
 Thumbs.db
 node_modules/
+.roadmap
 
 # Frontend build output
 /frontend/dist/
