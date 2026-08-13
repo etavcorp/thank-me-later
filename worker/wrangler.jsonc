@@ -1,18 +1,36 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "thank-me-later-worker",
+  "name": "thank-me-later-worker-prd",
   "main": "./src/index.ts",
   "compatibility_date": "2024-01-01",
+  "workers_dev": false,
+  "assets": {
+    "directory": "../frontend/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "thank-me-later-db-local",
-      "database_id": "local"
+      "database_name": "thank-me-later-db-prd",
+      "database_id": "8fa8dde7-32d6-4c0e-b066-7b9b8e4e5c9c"
     }
   ],
   "env": {
+    "local": {
+      "name": "thank-me-later-worker-local",
+      "workers_dev": false,
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "thank-me-later-db-local",
+          "database_id": "local"
+        }
+      ]
+    },
     "uat": {
       "name": "thank-me-later-worker-uat",
+      "workers_dev": false,
       "d1_databases": [
         {
           "binding": "DB",
@@ -23,6 +41,7 @@
     },
     "prd": {
       "name": "thank-me-later-worker-prd",
+      "workers_dev": false,
       "assets": {
         "directory": "../frontend/dist",
         "binding": "ASSETS",
