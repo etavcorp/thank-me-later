@@ -28,6 +28,10 @@ jobs:
         working-directory: worker
         run: npm ci
 
+      - name: Ensure Wrangler 4 is installed for this repo
+        working-directory: worker
+        run: npm install -D wrangler@^4
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
