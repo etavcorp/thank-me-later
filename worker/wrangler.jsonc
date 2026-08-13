@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "thank-me-later-worker",
+  "main": "./src/index.ts",
+  "compatibility_date": "2024-01-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "thank-me-later-db",
+      "database_id": "342031e9-c234-4b3c-a1d4-e2448f6d5d1f"
+    }
+  ]
+}

@@ -5,13 +5,15 @@
       <p class="text-zinc-400">Order individual plates or view our catering bases.</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16" v-fade-scroll>
-      <div v-for="item in menuItems" :key="item.name" class="border-b border-zinc-800 pb-8">
+    <div v-if="loading" class="text-zinc-400 text-center">Loading menu...</div>
+
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16" v-fade-scroll>
+      <div v-for="item in menuItems" :key="item.id" class="border-b border-zinc-800 pb-8">
         <div class="flex justify-between items-baseline mb-2">
-          <h3 class="text-2xl font-serif text-white">{{ item.name }}</h3>
-          <span class="text-brand-500 font-semibold text-lg">${{ item.price }}</span>
+          <h3 class="text-2xl font-serif text-white">{{ item.title }}</h3>
+          <span class="text-brand-500 font-semibold text-lg">{{ item.price }}</span>
         </div>
-        <p class="text-zinc-500 font-light mb-4">{{ item.desc }}</p>
+        <p class="text-zinc-500 font-light mb-4">{{ item.description }}</p>
       </div>
     </div>
     
@@ -25,14 +27,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const menuItems = ref([
-  { name: 'Marinade Grilled Lamb Chops', price: '35', desc: 'Marinated overnight and grilled to medium-rare, finished with a light honey-balsamic glaze.' },
-  { name: 'Crispy Fried Chicken', price: '22', desc: 'Buttermilk-brined and double-dredged, deep-fried until extra-crisp and juicy.' },
-  { name: 'Pan-Seared Salmon', price: '28', desc: 'Skin-on fillet, pan-seared and finished with lemon-butter and fresh herbs.' },
-  { name: 'Smothered Turkey Wings', price: '24', desc: 'Braised low-and-slow in a savory gravy until tender and falling from the bone.' },
-  { name: 'Baked Mac & Cheese', price: '12', desc: 'Creamy five-cheese sauce baked with a golden, crisp breadcrumb topping.' },
-  { name: 'Collard Greens', price: '10', desc: 'Slow-simmered with smoked turkey and aromatics until silky and flavorful.' }
-])
+const API_URL = import.meta.env.DEV
+  ? 'http://localhost:8787/api/menu'
+  : 'https://thank-me-later.etavcorp.workers.dev/api/menu'
+
+const menuItems = ref([])
+const loading = ref(true)
+
+async function loadMenuItems() {
+  try {
+    loading.value = true
+    const response = await fetch(API_URL)
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch menu items')
+    }
+
+    const data = await response.json()
+    menuItems.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('Failed to load menu items:', error)
+    menuItems.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadMenuItems()
+})
 </script>

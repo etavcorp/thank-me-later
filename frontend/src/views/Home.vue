@@ -15,7 +15,7 @@
           </p>
 
           <div class="cta-row">
-            <router-link to="/pricing" class="primary-btn">View menu</router-link>
+            <router-link to="/menu" class="primary-btn">View menu</router-link>
             <router-link to="/booking" class="secondary-btn">Book catering</router-link>
           </div>
 
