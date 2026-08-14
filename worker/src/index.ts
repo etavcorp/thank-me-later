@@ -13,6 +13,8 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:8787",
   "http://127.0.0.1:8787",
   "http://localhost:4173",
+  "https://thankmelatercatering.com",
+  "https://uat.thankmelatercatering.com",
 ];
 
 function getAllowedOrigins(env: Env): string[] {

@@ -51,6 +51,8 @@ npm run build
 
 Deployment notes
 
+- Production domain: `https://thankmelatercatering.com`
+- UAT domain: `https://uat.thankmelatercatering.com`
 - Production worker: `thank-me-later-worker-prd`
 - UAT worker: `thank-me-later-worker-uat`
 - Local dev worker: `thank-me-later-db-local` (D1 only)
