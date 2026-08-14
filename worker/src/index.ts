@@ -401,16 +401,18 @@ export async function ensureDbSchema(env: Env): Promise<void> {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'editor' CHECK (role IN ('admin', 'editor')),
+        role TEXT NOT NULL DEFAULT 'viewer' CHECK (role IN ('admin', 'editor', 'viewer')),
         totp_secret TEXT,
         totp_enabled INTEGER NOT NULL DEFAULT 0,
+        activation_code TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `).run();
 
     const defaultPasswordHash = await hashPassword("ChangeMe123!");
     await env.DB.prepare(`
-      INSERT INTO users (id, username, password_hash, role, totp_secret, totp_enabled, created_at)
+      INSERT INTO users (id, username, password_hash, role, totp_secret, totp_enabled, activation_code, is_active, created_at)
       SELECT
         id,
         COALESCE(username, ${legacyUsername}, 'admin') AS username,
@@ -418,7 +420,7 @@ export async function ensureDbSchema(env: Env): Promise<void> {
         COALESCE(role, 'viewer') AS role,
         COALESCE(totp_secret, NULL) AS totp_secret,
         COALESCE(totp_enabled, 0) AS totp_enabled,
-        COALESCE(NULL, NULL) AS activation_code,
+        NULL AS activation_code,
         1 AS is_active,
         COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at
       FROM users_legacy
