@@ -4,6 +4,8 @@ export interface Env {
   APP_ENV?: string;
   AUTH_SECRET?: string;
   ALLOWED_ORIGINS?: string;
+  BOOTSTRAP_USERNAME?: string;
+  BOOTSTRAP_PASSWORD?: string;
 }
 
 const encoder = new TextEncoder();
@@ -14,7 +16,11 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "http://127.0.0.1:8787",
   "http://localhost:4173",
   "https://thankmelatercatering.com",
+  "https://www.thankmelatercatering.com",
   "https://uat.thankmelatercatering.com",
+  "https://www.uat.thankmelatercatering.com",
+  "https://thank-me-later-worker-prd.etavcorp.workers.dev",
+  "https://thank-me-later-worker-uat.etavcorp.workers.dev",
 ];
 
 function getAllowedOrigins(env: Env): string[] {
@@ -33,7 +39,21 @@ function getRequestOrigin(request: Request, env: Env): string | null {
   }
 
   const configuredOrigins = getAllowedOrigins(env);
-  return configuredOrigins.includes(origin) ? origin : null;
+  if (configuredOrigins.includes(origin)) {
+    return origin;
+  }
+
+  try {
+    const hostname = new URL(origin).hostname.toLowerCase();
+    const isAllowedHost = hostname === "thankmelatercatering.com"
+      || hostname.endsWith(".thankmelatercatering.com")
+      || hostname.endsWith(".etavcorp.workers.dev")
+      || hostname === "etavcorp.workers.dev";
+
+    return isAllowedHost ? origin : null;
+  } catch {
+    return null;
+  }
 }
 
 function getCorsHeaders(request: Request, env: Env): Record<string, string> {
@@ -462,12 +482,21 @@ export async function seedDefaultAdminIfEmpty(env: Env): Promise<void> {
     throw new Error("D1 database binding is missing.");
   }
 
-  // Intentionally do not create a default admin here. The first admin must be created
-  // by the user through the setup flow so the credentials remain under their control.
   const row = await env.DB.prepare("SELECT COUNT(*) AS count FROM users").first<{ count: number }>();
   if (row && Number(row.count) > 0) {
     return;
   }
+
+  const username = (env.BOOTSTRAP_USERNAME ?? "").trim();
+  const password = (env.BOOTSTRAP_PASSWORD ?? "").trim();
+  if (!username || !password || password.length < 8) {
+    return;
+  }
+
+  const passwordHash = await hashPassword(password);
+  await env.DB.prepare(
+    "INSERT INTO users (username, password_hash, role, totp_secret, totp_enabled, activation_code, is_active) VALUES (?, ?, 'admin', NULL, 0, NULL, 1)"
+  ).bind(username, passwordHash).run();
 }
 
 export async function seedMenuItemsIfEmpty(env: Env): Promise<void> {
@@ -923,8 +952,18 @@ export default {
 
       return jsonResponse({ error: "Not found" }, request, env, { status: 404, headers: { "Cache-Control": "no-store" } });
     } catch (error) {
-      console.error("Worker API error:", error);
-      return jsonResponse({ error: "Internal server error" }, request, env, { status: 500, headers: { "Cache-Control": "no-store" } });
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      console.error("Worker API error:", { message, stack });
+      return jsonResponse(
+        {
+          error: "Internal server error",
+          debug: message,
+        },
+        request,
+        env,
+        { status: 500, headers: { "Cache-Control": "no-store" } }
+      );
     }
   },
 };
