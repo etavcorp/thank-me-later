@@ -1,7 +1,7 @@
 <template>
   <section class="pt-32 pb-24 max-w-5xl mx-auto px-4 min-h-screen">
     <div class="text-center mb-16" v-fade-scroll>
-      <h1 class="text-5xl font-serif text-white mb-4">A La Carte & Platters</h1>
+      <h1 class="text-5xl font-serif text-white mb-4">A La Carte & Platters #test</h1>
       <p class="text-zinc-400">Order individual plates or view our catering bases.</p>
     </div>
 
