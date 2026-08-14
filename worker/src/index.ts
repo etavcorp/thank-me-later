@@ -104,6 +104,16 @@ function base64UrlDecodeToBytes(value: string): Uint8Array {
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
+function createRandomToken(length = 32): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return base64UrlEncodeBytes(bytes);
+}
+
+async function hashToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(token));
+  return base64UrlEncodeBytes(new Uint8Array(digest));
+}
+
 async function deriveKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     "raw",
@@ -303,7 +313,7 @@ async function verifySessionToken(token: string, env: Env): Promise<{ id: number
   };
 }
 
-async function requireAuth(request: Request, env: Env, allowedRoles: string[] = ["admin", "editor"]) {
+async function requireAuth(request: Request, env: Env, allowedRoles: string[] = ["admin", "editor", "viewer"]) {
   const authHeader = request.headers.get("Authorization") || "";
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
 
@@ -323,6 +333,31 @@ async function requireAuth(request: Request, env: Env, allowedRoles: string[] = 
   return { authenticated: true, user: payload };
 }
 
+async function createTrustedDeviceToken(userId: number, env: Env): Promise<string> {
+  const token = createRandomToken(32);
+  const tokenHash = await hashToken(token);
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString();
+
+  await env.DB.prepare(
+    "INSERT INTO trusted_devices (user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)"
+  ).bind(userId, tokenHash, expiresAt).run();
+
+  return token;
+}
+
+async function verifyTrustedDeviceToken(userId: number, token: string, env: Env): Promise<boolean> {
+  if (!token) {
+    return false;
+  }
+
+  const tokenHash = await hashToken(token);
+  const row = await env.DB.prepare(
+    "SELECT 1 FROM trusted_devices WHERE user_id = ? AND token_hash = ? AND expires_at > datetime('now') LIMIT 1"
+  ).bind(userId, tokenHash).first();
+
+  return !!row;
+}
+
 export async function ensureDbSchema(env: Env): Promise<void> {
   if (!env.DB) {
     throw new Error("D1 database binding is missing.");
@@ -336,6 +371,8 @@ export async function ensureDbSchema(env: Env): Promise<void> {
     "role",
     "totp_secret",
     "totp_enabled",
+    "activation_code",
+    "is_active",
     "created_at",
   ];
 
@@ -345,9 +382,11 @@ export async function ensureDbSchema(env: Env): Promise<void> {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'editor' CHECK (role IN ('admin', 'editor')),
+        role TEXT NOT NULL DEFAULT 'viewer' CHECK (role IN ('admin', 'editor', 'viewer')),
         totp_secret TEXT,
         totp_enabled INTEGER NOT NULL DEFAULT 0,
+        activation_code TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `).run();
@@ -376,9 +415,11 @@ export async function ensureDbSchema(env: Env): Promise<void> {
         id,
         COALESCE(username, ${legacyUsername}, 'admin') AS username,
         COALESCE(password_hash, ?) AS password_hash,
-        COALESCE(role, 'editor') AS role,
+        COALESCE(role, 'viewer') AS role,
         COALESCE(totp_secret, NULL) AS totp_secret,
         COALESCE(totp_enabled, 0) AS totp_enabled,
+        COALESCE(NULL, NULL) AS activation_code,
+        1 AS is_active,
         COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at
       FROM users_legacy
     `).bind(defaultPasswordHash).run();
@@ -387,6 +428,19 @@ export async function ensureDbSchema(env: Env): Promise<void> {
   }
 
   await env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username)").run();
+
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS trusted_devices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL,
+      expires_at DATETIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `).run();
+
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_trusted_devices_user_id ON trusted_devices(user_id)").run();
 
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS menu_items (
@@ -503,10 +557,12 @@ export default {
       }
 
       if (url.pathname === "/api/auth/login" && request.method === "POST") {
-        const body = await getBodyJson<{ username?: string; password?: string; totpCode?: string }>(request);
+        const body = await getBodyJson<{ username?: string; password?: string; totpCode?: string; trustedDeviceToken?: string; rememberThisBrowser?: boolean }>(request);
         const username = typeof body.username === "string" ? body.username.trim() : "";
         const password = typeof body.password === "string" ? body.password : "";
         const totpCode = typeof body.totpCode === "string" ? body.totpCode.trim() : "";
+        const trustedDeviceToken = typeof body.trustedDeviceToken === "string" ? body.trustedDeviceToken.trim() : "";
+        const rememberThisBrowser = body.rememberThisBrowser === true;
 
         if (!username || !password) {
           return jsonResponse({ error: "Username and password are required" }, request, env, { status: 400 });
@@ -533,7 +589,8 @@ export default {
         }
 
         if (Number(userRow.totp_enabled) === 1 && userRow.totp_secret) {
-          if (!totpCode) {
+          const trustedDeviceOk = trustedDeviceToken ? await verifyTrustedDeviceToken(userRow.id, trustedDeviceToken, env) : false;
+          if (!trustedDeviceOk && !totpCode) {
             return jsonResponse(
               { requiresTotp: true, message: "TOTP code required" },
               request,
@@ -545,18 +602,25 @@ export default {
             );
           }
 
-          const validTotp = await verifyTotp(userRow.totp_secret, totpCode);
-          if (!validTotp) {
-            return jsonResponse(
-              { error: "Invalid TOTP code", requiresTotp: true },
-              request,
-              env,
-              {
-                status: 401,
-                headers: { "Cache-Control": "no-store" },
-              }
-            );
+          if (!trustedDeviceOk) {
+            const validTotp = await verifyTotp(userRow.totp_secret, totpCode);
+            if (!validTotp) {
+              return jsonResponse(
+                { error: "Invalid TOTP code", requiresTotp: true },
+                request,
+                env,
+                {
+                  status: 401,
+                  headers: { "Cache-Control": "no-store" },
+                }
+              );
+            }
           }
+        }
+
+        let trustedDeviceTokenResponse: string | null = null;
+        if (rememberThisBrowser && Number(userRow.totp_enabled) === 1 && userRow.totp_secret) {
+          trustedDeviceTokenResponse = await createTrustedDeviceToken(userRow.id, env);
         }
 
         const token = await createSessionToken({ id: userRow.id, username: userRow.username, role: userRow.role }, env);
@@ -569,6 +633,7 @@ export default {
               role: userRow.role,
             },
             requiresTotp: false,
+            trustedDeviceToken: trustedDeviceTokenResponse,
           },
           request,
           env,
@@ -576,6 +641,21 @@ export default {
             status: 200,
             headers: { "Cache-Control": "no-store" },
           }
+        );
+      }
+
+      if (url.pathname === "/api/auth/setup-status" && request.method === "GET") {
+        const count = await env.DB.prepare("SELECT COUNT(*) AS count FROM users").first<{ count: number }>();
+        return jsonResponse(
+          {
+            hasAdmin: Number(count?.count ?? 0) > 0,
+            canCreateUser: Number(count?.count ?? 0) > 0,
+            defaultRole: "viewer",
+            activationRequired: true,
+          },
+          request,
+          env,
+          { headers: { "Cache-Control": "no-store" } }
         );
       }
 
@@ -615,7 +695,7 @@ export default {
               : "";
 
         const password = typeof body.password === "string" ? body.password : "";
-        const role = typeof body.role === "string" && ["admin", "editor"].includes(body.role) ? body.role : "admin";
+        const role = typeof body.role === "string" && ["admin", "editor", "viewer"].includes(body.role) ? body.role : "admin";
         const rawTotpEnabled = body.totpEnabled ?? body.totp_enabled ?? body.enableTotp ?? body.enable_totp ?? false;
         const totpEnabled = rawTotpEnabled === true || rawTotpEnabled === "true" || rawTotpEnabled === 1 || rawTotpEnabled === "1" ? 1 : 0;
         const rawTotpSecret = typeof body.totpSecret === "string"
@@ -637,7 +717,7 @@ export default {
         const passwordHash = await hashPassword(password);
 
         const result = await env.DB.prepare(
-          "INSERT INTO users (username, password_hash, role, totp_secret, totp_enabled) VALUES (?, ?, ?, ?, ?)"
+          "INSERT INTO users (username, password_hash, role, totp_secret, totp_enabled, activation_code, is_active) VALUES (?, ?, ?, ?, ?, NULL, 1)"
         ).bind(username, passwordHash, role, totpSecret, totpEnabled).run();
 
         return jsonResponse(
@@ -646,6 +726,62 @@ export default {
             username,
             role,
             totpEnabled: Boolean(totpEnabled),
+          },
+          request,
+          env,
+          { status: 201, headers: { "Cache-Control": "no-store" } }
+        );
+      }
+
+      if ((url.pathname === "/api/auth/create-user" || url.pathname === "/api/users/create") && request.method === "POST") {
+        const auth = await requireAuth(request, env, ["admin"]);
+        if (!auth.authenticated) {
+          return jsonResponse({ error: auth.error }, request, env, { status: auth.status, headers: { "Cache-Control": "no-store" } });
+        }
+
+        let body: Record<string, unknown> = {};
+
+        try {
+          body = await getBodyJson<Record<string, unknown>>(request);
+        } catch {
+          body = {};
+        }
+
+        const username = typeof body.username === "string" ? body.username.trim() : "";
+        const password = typeof body.password === "string" ? body.password : "";
+        const activationCode = typeof body.activationCode === "string" ? body.activationCode.trim() : "";
+        const expectedActivationCode = (env.AUTH_SECRET || "ACTIVATE-2026").trim();
+        const requestedRole = typeof body.role === "string" ? body.role : "viewer";
+        const finalRole = ["admin", "editor", "viewer"].includes(requestedRole) ? "viewer" : "viewer";
+
+        if (!username || !password || password.length < 8) {
+          return jsonResponse({ error: "Username and password (minimum 8 chars) are required" }, request, env, { status: 400, headers: { "Cache-Control": "no-store" } });
+        }
+
+        if (!activationCode || activationCode !== expectedActivationCode) {
+          return jsonResponse({ error: "A valid activation code is required to create a new user." }, request, env, { status: 400, headers: { "Cache-Control": "no-store" } });
+        }
+
+        const existingUser = await env.DB.prepare(
+          "SELECT 1 FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1"
+        ).bind(username).first();
+
+        if (existingUser) {
+          return jsonResponse({ error: "A user with that username already exists." }, request, env, { status: 409, headers: { "Cache-Control": "no-store" } });
+        }
+
+        const passwordHash = await hashPassword(password);
+        const result = await env.DB.prepare(
+          "INSERT INTO users (username, password_hash, role, totp_secret, totp_enabled, activation_code, is_active) VALUES (?, ?, ?, NULL, 0, ?, 1)"
+        ).bind(username, passwordHash, finalRole, activationCode).run();
+
+        return jsonResponse(
+          {
+            id: result.meta.last_row_id ?? null,
+            username,
+            role: finalRole,
+            activationRequired: true,
+            totpEnabled: false,
           },
           request,
           env,

@@ -1,6 +1,26 @@
 <template>
   <section class="pt-32 pb-24 max-w-6xl mx-auto px-4 min-h-screen">
-    <div v-if="!accessGranted" class="max-w-md mx-auto rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-8 shadow-2xl shadow-black/30">
+    <div v-if="accountCreatedConfirmation" class="max-w-lg mx-auto rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-8 shadow-2xl shadow-black/30 text-center">
+      <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-brand-500/10 text-3xl">✅</div>
+      <p class="text-xs uppercase tracking-[0.35em] text-brand-400 mb-4">Account ready</p>
+      <h1 class="text-3xl font-serif text-white mb-4">Your account has been created</h1>
+      <p class="text-zinc-300 mb-6">Sign in with the exact username and password you just created to continue.</p>
+
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 text-left text-sm text-zinc-300 mb-6">
+        <p class="mb-2"><span class="text-zinc-400">Username:</span> <strong class="text-white">{{ createdAccount.username }}</strong></p>
+        <p><span class="text-zinc-400">Default access:</span> <strong class="text-white">{{ createdAccount.role || 'viewer' }}</strong></p>
+      </div>
+
+      <button
+        type="button"
+        @click="returnToLogin()"
+        class="w-full rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors"
+      >
+        Continue to login
+      </button>
+    </div>
+
+    <div v-else-if="!accessGranted" class="max-w-md mx-auto rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-8 shadow-2xl shadow-black/30">
       <p class="text-xs uppercase tracking-[0.35em] text-brand-400 mb-4">Admin access</p>
       <h1 class="text-3xl font-serif text-white mb-6">Menu management</h1>
 
@@ -30,25 +50,12 @@
             />
           </div>
 
-          <div v-if="requiresTotp">
-            <label for="admin-totp" class="block text-sm text-zinc-400 mb-2">Authenticator code</label>
-            <input
-              id="admin-totp"
-              v-model="totpCode"
-              type="text"
-              inputmode="numeric"
-              maxlength="6"
-              placeholder="123456"
-              class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors"
-            />
-          </div>
-
           <button
             type="submit"
             class="mt-2 w-full rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
             :disabled="submitting"
           >
-            {{ submitting ? 'Signing in...' : requiresTotp ? 'Verify code' : 'Sign in' }}
+            {{ submitting ? 'Signing in...' : 'Sign in' }}
           </button>
         </form>
 
@@ -57,179 +64,127 @@
           @click="beginSetupFlow"
           class="mt-4 w-full rounded-full border border-zinc-700 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors"
         >
-          Create first admin
+          {{ setupStatus.hasAdmin ? 'Create user' : 'Create first admin' }}
         </button>
       </div>
 
       <div v-else class="space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="text-xl font-serif text-white">Create first admin</h2>
+          <h2 class="text-xl font-serif text-white">{{ setupTab === 'first-admin' ? 'Create first admin' : 'Create user' }}</h2>
+          <button type="button" @click="cancelSetupFlow" class="text-sm uppercase tracking-[0.2em] text-zinc-400 hover:text-brand-400">Back</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 rounded-xl border border-zinc-800 bg-zinc-950/60 p-1">
           <button
             type="button"
-            @click="cancelSetupFlow"
-            class="text-sm uppercase tracking-[0.2em] text-zinc-400 hover:text-brand-400"
+            @click="setupTab = 'first-admin'"
+            :disabled="setupStatus.hasAdmin"
+            :class="setupTab === 'first-admin' ? 'bg-brand-500 text-white' : 'text-zinc-300 hover:text-white'"
+            class="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.2em] transition-colors disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Back
+            First admin
+          </button>
+          <button
+            type="button"
+            @click="setupTab = 'create-user'"
+            :class="setupTab === 'create-user' ? 'bg-brand-500 text-white' : 'text-zinc-300 hover:text-white'"
+            class="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.2em] transition-colors"
+          >
+            Create user
           </button>
         </div>
 
-        <div>
-          <label for="setup-username" class="block text-sm text-zinc-400 mb-2">Username</label>
-          <input
-            id="setup-username"
-            v-model="setupForm.username"
-            type="text"
-            autocomplete="username"
-            placeholder="Enter admin username"
-            class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors"
-          />
-        </div>
-
-        <div>
-          <label for="setup-password" class="block text-sm text-zinc-400 mb-2">Password</label>
-          <input
-            id="setup-password"
-            v-model="setupForm.password"
-            type="password"
-            autocomplete="new-password"
-            placeholder="Create a strong password"
-            class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors"
-          />
-        </div>
-
-        <div>
-          <label for="setup-confirm-password" class="block text-sm text-zinc-400 mb-2">Confirm password</label>
-          <input
-            id="setup-confirm-password"
-            v-model="setupForm.confirmPassword"
-            type="password"
-            autocomplete="new-password"
-            placeholder="Repeat password"
-            class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors"
-          />
-        </div>
-
-        <label class="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-3 text-sm text-zinc-300">
-          <input v-model="setupForm.totpEnabled" type="checkbox" class="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-brand-500 focus:ring-brand-500" />
-          Enable authenticator app
-        </label>
-
-        <div v-if="setupForm.totpEnabled && !showSetupTotpQr" class="space-y-3">
-          <button
-            type="button"
-            @click="showSetupTotpQr = true"
-            class="w-full rounded-full border border-brand-500/60 bg-brand-500/10 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-brand-300 hover:bg-brand-500/20 transition-colors"
-          >
-            I’m ready to see the QR code
-          </button>
-        </div>
-
-        <div v-else-if="setupForm.totpEnabled" class="space-y-4">
+        <div v-if="setupTab === 'first-admin'" class="space-y-4">
           <div>
-            <label for="setup-totp-secret" class="block text-sm text-zinc-400 mb-2">Authenticator secret</label>
-            <div class="flex gap-2">
-              <input
-                id="setup-totp-secret"
-                v-model="setupForm.totpSecret"
-                type="text"
-                placeholder="JBSWY3DPEHPK3PXP"
-                class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors"
-              />
-              <button
-                type="button"
-                @click="generateSetupTotpSecret"
-                class="shrink-0 rounded-xl border border-zinc-700 px-3 py-3 text-xs uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors"
-              >
-                Regenerate
-              </button>
-            </div>
+            <label for="setup-username" class="block text-sm text-zinc-400 mb-2">Username</label>
+            <input id="setup-username" v-model="setupForm.username" type="text" autocomplete="username" placeholder="Enter admin username" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" />
           </div>
 
-          <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
-            <p class="text-sm text-zinc-300">Verify your authenticator is synced correctly by entering both recent codes.</p>
-
-            <div>
-              <label for="setup-totp-previous" class="block text-sm text-zinc-400 mb-2">Previous code</label>
-              <input
-                id="setup-totp-previous"
-                v-model="setupForm.totpVerifyPrevious"
-                type="text"
-                inputmode="numeric"
-                maxlength="6"
-                placeholder="123456"
-                class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label for="setup-totp-current" class="block text-sm text-zinc-400 mb-2">Current code</label>
-              <input
-                id="setup-totp-current"
-                v-model="setupForm.totpVerifyCurrent"
-                type="text"
-                inputmode="numeric"
-                maxlength="6"
-                placeholder="654321"
-                class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors"
-              />
-            </div>
+          <div>
+            <label for="setup-password" class="block text-sm text-zinc-400 mb-2">Password</label>
+            <input id="setup-password" v-model="setupForm.password" type="password" autocomplete="new-password" placeholder="Create a strong password" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" />
           </div>
 
-          <div v-if="setupTotpUri" class="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
-            <div class="mb-3 flex items-center justify-between gap-3">
-              <p class="text-[10px] uppercase tracking-[0.25em] text-zinc-400">Scan with your authenticator app</p>
-              <button
-                type="button"
-                @click="showSetupTotpQr = false"
-                class="text-[10px] uppercase tracking-[0.2em] text-zinc-400 hover:text-brand-400"
-              >
-                Hide
-              </button>
+          <div>
+            <label for="setup-confirm-password" class="block text-sm text-zinc-400 mb-2">Confirm password</label>
+            <input id="setup-confirm-password" v-model="setupForm.confirmPassword" type="password" autocomplete="new-password" placeholder="Repeat password" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" />
+          </div>
+
+          <label class="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-3 text-sm text-zinc-300">
+            <input v-model="setupForm.totpEnabled" type="checkbox" class="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-brand-500 focus:ring-brand-500" />
+            Enable authenticator app
+          </label>
+
+          <div v-if="setupForm.totpEnabled && !showSetupTotpQr" class="space-y-3">
+            <button type="button" @click="showSetupTotpQr = true" class="w-full rounded-full border border-brand-500/60 bg-brand-500/10 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-brand-300 hover:bg-brand-500/20 transition-colors">I’m ready to see the QR code</button>
+          </div>
+
+          <div v-else-if="setupForm.totpEnabled" class="space-y-4">
+            <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
+              <div class="mb-3 flex items-center justify-between gap-3">
+                <p class="text-[10px] uppercase tracking-[0.25em] text-zinc-400">Scan with your authenticator app</p>
+                <button type="button" @click="showSetupTotpQr = false" class="text-[10px] uppercase tracking-[0.2em] text-zinc-400 hover:text-brand-400">Hide</button>
+              </div>
+
+              <div class="rounded-xl border border-zinc-700 bg-zinc-950/80 p-3">
+                <img v-if="setupQrDataUrl" :src="setupQrDataUrl" alt="Authenticator QR code" class="mx-auto block h-52 w-52 object-contain" />
+                <p v-else class="text-center text-sm text-zinc-400">QR code generation is unavailable right now.</p>
+              </div>
+
+              <div class="mt-4 text-left">
+                <p class="text-xs uppercase tracking-[0.18em] text-zinc-500 mb-2">Authenticator secret</p>
+                <div class="rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-200 font-mono tracking-[0.18em]">{{ maskedTotpSecret }}</div>
+              </div>
+
+              <div v-if="showSetupReveal" class="mt-4 flex flex-wrap gap-2">
+                <button type="button" @click="copySetupSecret" class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-200 hover:border-brand-500 hover:text-brand-400 transition-colors">{{ copiedSecret ? 'Secret copied' : 'Copy secret' }}</button>
+                <button type="button" @click="copySetupUri" class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-200 hover:border-brand-500 hover:text-brand-400 transition-colors">{{ copiedUri ? 'Link copied' : 'Copy setup link' }}</button>
+              </div>
+
+              <button v-else type="button" @click="showSetupReveal = true" class="mt-4 w-full rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Reveal copy options</button>
             </div>
 
-            <div class="rounded-xl border border-zinc-700 bg-zinc-950/80 p-3">
-              <img
-                v-if="setupQrDataUrl"
-                :src="setupQrDataUrl"
-                alt="Authenticator QR code"
-                class="mx-auto block h-52 w-52 object-contain"
-              />
-              <p v-else class="text-center text-sm text-zinc-400">QR code generation is unavailable right now.</p>
+            <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 space-y-3">
+              <p class="text-sm text-zinc-300">Verify your authenticator is synced correctly by entering both recent codes.</p>
+
+              <div>
+                <label for="setup-totp-previous" class="block text-sm text-zinc-400 mb-2">Previous code</label>
+                <input id="setup-totp-previous" v-model="setupForm.totpVerifyPrevious" type="text" inputmode="numeric" maxlength="6" placeholder="123456" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" />
+              </div>
+
+              <div>
+                <label for="setup-totp-current" class="block text-sm text-zinc-400 mb-2">Current code</label>
+                <input id="setup-totp-current" v-model="setupForm.totpVerifyCurrent" type="text" inputmode="numeric" maxlength="6" placeholder="654321" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" />
+              </div>
             </div>
-
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                @click="copySetupSecret"
-                class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-200 hover:border-brand-500 hover:text-brand-400 transition-colors"
-              >
-                {{ copiedSecret ? 'Secret copied' : 'Copy secret' }}
-              </button>
-              <button
-                type="button"
-                @click="copySetupUri"
-                class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-200 hover:border-brand-500 hover:text-brand-400 transition-colors"
-              >
-                {{ copiedUri ? 'Link copied' : 'Copy setup link' }}
-              </button>
-            </div>
-
-            <p class="mt-3 text-xs uppercase tracking-[0.18em] text-zinc-500">Secret</p>
-            <p class="mt-1 break-all text-sm text-zinc-200">{{ setupForm.totpSecret }}</p>
-
-            <a :href="setupTotpUri" target="_blank" rel="noopener noreferrer" class="mt-3 block break-all text-sm text-brand-400 underline decoration-brand-500/60 underline-offset-4">
-              {{ setupTotpUri }}
-            </a>
           </div>
         </div>
 
-        <button
-          type="button"
-          @click="submitSetup"
-          class="w-full rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors disabled:cursor-not-allowed disabled:opacity-70"
-          :disabled="setupSubmitting"
-        >
-          {{ setupSubmitting ? 'Creating admin...' : 'Create admin' }}
+        <div v-else class="space-y-4">
+          <div>
+            <label for="user-username" class="block text-sm text-zinc-400 mb-2">Username</label>
+            <input id="user-username" v-model="setupForm.username" type="text" autocomplete="username" placeholder="Enter username" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" />
+          </div>
+
+          <div>
+            <label for="user-password" class="block text-sm text-zinc-400 mb-2">Password</label>
+            <input id="user-password" v-model="setupForm.password" type="password" autocomplete="new-password" placeholder="Create a password" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" />
+          </div>
+
+          <div>
+            <label for="user-activation-code" class="block text-sm text-zinc-400 mb-2">Activation code</label>
+            <input id="user-activation-code" v-model="setupForm.activationCode" type="text" autocomplete="one-time-code" placeholder="Enter activation code" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" />
+          </div>
+
+          <div class="rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-3 text-sm text-zinc-300">
+            <p class="mb-1 text-xs uppercase tracking-[0.2em] text-zinc-500">Default role</p>
+            <p class="font-medium text-zinc-100">Viewer</p>
+            <p class="mt-2 text-zinc-400">New users start with read-only access and must be manually upgraded by an admin.</p>
+          </div>
+        </div>
+
+        <button type="button" @click="submitSetup" class="w-full rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors disabled:cursor-not-allowed disabled:opacity-70" :disabled="setupSubmitting">
+          {{ setupSubmitting ? (setupTab === 'first-admin' ? 'Creating admin...' : 'Creating user...') : (setupTab === 'first-admin' ? 'Create admin' : 'Create user') }}
         </button>
       </div>
 
@@ -243,54 +198,31 @@
           <p class="text-xs uppercase tracking-[0.35em] text-brand-400 mb-3">Admin</p>
           <h1 class="text-4xl font-serif text-white">Manage menu</h1>
         </div>
-        <button
-          @click="logoutAdmin"
-          class="rounded-full border border-zinc-700 px-5 py-2 text-sm uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors"
-        >
-          Log out
-        </button>
+        <button @click="logoutAdmin" class="rounded-full border border-zinc-700 px-5 py-2 text-sm uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Log out</button>
       </div>
 
       <div class="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-8">
         <div class="rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/30">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-2xl font-serif text-white">Current items</h2>
-            <span class="rounded-full border border-zinc-700 px-3 py-1 text-xs uppercase tracking-[0.2em] text-zinc-300">
-              {{ menuItems.length }} items
-            </span>
+            <span class="rounded-full border border-zinc-700 px-3 py-1 text-xs uppercase tracking-[0.2em] text-zinc-300">{{ menuItems.length }} items</span>
           </div>
 
           <div v-if="loading" class="text-zinc-400">Loading menu...</div>
           <div v-else-if="menuItems.length === 0" class="text-zinc-400">No menu items yet.</div>
           <div v-else class="space-y-4">
-            <div
-              v-for="item in menuItems"
-              :key="item.id"
-              class="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
-            >
+            <div v-for="item in menuItems" :key="item.id" class="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
               <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <div class="flex items-center gap-3 mb-2">
                     <h3 class="text-xl font-serif text-white">{{ item.title }}</h3>
-                    <span class="rounded-full bg-brand-500/15 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-400">
-                      ${{ item.price }}
-                    </span>
+                    <span class="rounded-full bg-brand-500/15 px-2 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-400">${{ item.price }}</span>
                   </div>
                   <p class="text-zinc-400">{{ item.description }}</p>
                 </div>
                 <div class="flex gap-2 mt-2 md:mt-0">
-                  <button
-                    @click="startEdit(item)"
-                    class="rounded-full border border-zinc-700 px-3 py-2 text-xs uppercase tracking-[0.18em] text-zinc-200 hover:border-brand-500 hover:text-brand-400 transition-colors"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    @click="deleteItem(item.id)"
-                    class="rounded-full border border-red-700/70 px-3 py-2 text-xs uppercase tracking-[0.18em] text-red-300 hover:border-red-500 hover:text-red-200 transition-colors"
-                  >
-                    Delete
-                  </button>
+                  <button @click="startEdit(item)" class="rounded-full border border-zinc-700 px-3 py-2 text-xs uppercase tracking-[0.18em] text-zinc-200 hover:border-brand-500 hover:text-brand-400 transition-colors">Edit</button>
+                  <button @click="deleteItem(item.id)" class="rounded-full border border-red-700/70 px-3 py-2 text-xs uppercase tracking-[0.18em] text-red-300 hover:border-red-500 hover:text-red-200 transition-colors">Delete</button>
                 </div>
               </div>
             </div>
@@ -298,9 +230,7 @@
         </div>
 
         <div class="rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/30">
-          <h2 class="text-2xl font-serif text-white mb-6">
-            {{ editingId ? 'Edit menu item' : 'Add new menu item' }}
-          </h2>
+          <h2 class="text-2xl font-serif text-white mb-6">{{ editingId ? 'Edit menu item' : 'Add new menu item' }}</h2>
 
           <form @submit.prevent="submitForm" class="space-y-4">
             <div>
@@ -319,24 +249,99 @@
             </div>
 
             <div class="flex gap-3 pt-2">
-              <button
-                type="submit"
-                class="flex-1 rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors"
-              >
-                {{ editingId ? 'Save changes' : 'Add item' }}
-              </button>
-              <button
-                v-if="editingId"
-                type="button"
-                @click="resetForm"
-                class="rounded-full border border-zinc-700 px-4 py-3 text-sm uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors"
-              >
-                Cancel
-              </button>
+              <button type="submit" class="flex-1 rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors">{{ editingId ? 'Save changes' : 'Add item' }}</button>
+              <button v-if="editingId" type="button" @click="resetForm" class="rounded-full border border-zinc-700 px-4 py-3 text-sm uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Cancel</button>
             </div>
           </form>
 
           <p v-if="formMessage" class="mt-4 text-sm text-brand-400">{{ formMessage }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showBackupCodesModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+      <div class="w-full max-w-lg rounded-[28px] border border-zinc-800 bg-zinc-900 p-6 shadow-2xl shadow-black/40">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.25em] text-brand-400">Recovery codes</p>
+            <h2 class="text-2xl font-serif text-white mt-2">Backup access</h2>
+          </div>
+          <button type="button" @click="showBackupCodesModal = false" class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Close</button>
+        </div>
+
+        <p class="mb-5 text-sm text-zinc-300">Store these codes somewhere safe. Each one works once and can be used if you lose your authenticator.</p>
+
+        <div class="grid grid-cols-2 gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+          <div v-for="code in backupCodes" :key="code" class="rounded-xl border border-zinc-700 bg-zinc-900/70 px-3 py-2 text-center font-mono text-sm text-zinc-100">{{ code }}</div>
+        </div>
+
+        <button type="button" @click="copyRecoveryCodes" class="mt-5 w-full rounded-full border border-brand-500/60 bg-brand-500/10 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-brand-300 hover:bg-brand-500/20 transition-colors">Copy backup codes</button>
+      </div>
+    </div>
+
+    <div v-if="totpModalOpen" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+      <div class="w-full max-w-md rounded-[28px] border border-zinc-800 bg-zinc-900 p-6 shadow-2xl shadow-black/40">
+        <p class="text-[10px] uppercase tracking-[0.25em] text-brand-400">Two-step verification</p>
+        <h2 class="mt-3 text-2xl font-serif text-white">Enter your security code</h2>
+
+        <div class="mt-5 space-y-4">
+          <div>
+            <label for="totp-modal-code" class="block text-sm text-zinc-400 mb-2">Authenticator code</label>
+            <input id="totp-modal-code" v-model="totpCode" type="text" inputmode="numeric" maxlength="6" placeholder="123456" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" />
+          </div>
+
+          <label class="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-3 text-sm text-zinc-300">
+            <input v-model="totpRememberThisBrowser" type="checkbox" class="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-brand-500 focus:ring-brand-500" />
+            Remember this browser
+          </label>
+
+          <button type="button" @click="submitTotpLogin" class="w-full rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors disabled:cursor-not-allowed disabled:opacity-70" :disabled="submitting">{{ submitting ? 'Verifying...' : 'Verify code' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="welcomeModalOpen" class="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+      <div class="w-full max-w-2xl rounded-[30px] border border-zinc-800 bg-zinc-900/95 p-6 shadow-2xl shadow-black/40">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.25em] text-brand-400">Welcome</p>
+            <h2 class="mt-2 text-3xl font-serif text-white">Welcome back, {{ username || 'admin' }}.</h2>
+          </div>
+          <button type="button" @click="welcomeModalOpen = false" class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Close</button>
+        </div>
+
+        <p class="text-zinc-300 mb-6">Here’s the quickest way to get comfortable with the menu editor and your most important controls.</p>
+
+        <div class="grid gap-3 md:grid-cols-3 mb-6">
+          <div class="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+            <p class="text-xs uppercase tracking-[0.2em] text-brand-400 mb-2">01</p>
+            <p class="font-medium text-white">Add new items</p>
+            <p class="mt-2 text-sm text-zinc-400">Populate your menu with pricing, titles, and descriptions.</p>
+          </div>
+          <div class="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+            <p class="text-xs uppercase tracking-[0.2em] text-brand-400 mb-2">02</p>
+            <p class="font-medium text-white">Edit live content</p>
+            <p class="mt-2 text-sm text-zinc-400">Update or remove current menu items in seconds.</p>
+          </div>
+          <div class="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+            <p class="text-xs uppercase tracking-[0.2em] text-brand-400 mb-2">03</p>
+            <p class="font-medium text-white">Manage access</p>
+            <p class="mt-2 text-sm text-zinc-400">Create users, assign the right permissions, and maintain security.</p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 mb-6">
+          <p class="text-xs uppercase tracking-[0.2em] text-zinc-500 mb-3">Getting started checklist</p>
+          <ul class="space-y-3 text-sm text-zinc-300">
+            <li class="flex items-center gap-3"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-500/15 text-brand-300 text-xs">✓</span> Confirm your menu setup and pricing</li>
+            <li class="flex items-center gap-3"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-500/15 text-brand-300 text-xs">✓</span> Add at least one featured menu item</li>
+            <li class="flex items-center gap-3"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-500/15 text-brand-300 text-xs">✓</span> Create any needed team members from the user flow</li>
+          </ul>
+        </div>
+
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <button type="button" @click="welcomeModalOpen = false" class="flex-1 rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Take a quick tour</button>
+          <button type="button" @click="welcomeModalOpen = false" class="flex-1 rounded-full bg-brand-500 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors">Start managing</button>
         </div>
       </div>
     </div>
@@ -345,7 +350,11 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import QRCode from 'qrcode'
+
+const route = useRoute()
+const router = useRouter()
 
 const rawApiUrl = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8787' : window.location.origin)).trim()
 const API_BASE = rawApiUrl.replace(/\/$/, '').replace(/\/api\/menu$/, '').replace(/\/api$/, '')
@@ -357,8 +366,12 @@ const accessGranted = ref(false)
 const username = ref('')
 const password = ref('')
 const totpCode = ref('')
+const totpRememberThisBrowser = ref(false)
+const pendingTotpLogin = ref(null)
 const requiresTotp = ref(false)
 const setupMode = ref(false)
+const setupTab = ref('first-admin')
+const setupStatus = ref({ hasAdmin: false, canCreateUser: false, defaultRole: 'viewer', activationRequired: true })
 const setupSubmitting = ref(false)
 const setupMessage = ref('')
 const errorMessage = ref('')
@@ -366,19 +379,35 @@ const formMessage = ref('')
 const submitting = ref(false)
 const editingId = ref(null)
 const form = ref({ title: '', price: '', description: '' })
+const accountCreatedConfirmation = ref(false)
+const createdAccount = ref({ username: '', role: 'viewer' })
+const showBackupCodesModal = ref(false)
+const totpModalOpen = ref(false)
+const welcomeModalOpen = ref(false)
+const backupCodes = ref([])
+const showSetupReveal = ref(false)
+const showSetupTotpQr = ref(false)
+const setupQrDataUrl = ref('')
+const copiedSecret = ref(false)
+const copiedUri = ref(false)
 const setupForm = ref({
   username: '',
   password: '',
   confirmPassword: '',
+  activationCode: '',
+  role: 'viewer',
   totpEnabled: false,
   totpSecret: '',
   totpVerifyPrevious: '',
   totpVerifyCurrent: '',
 })
-const showSetupTotpQr = ref(false)
-const setupQrDataUrl = ref('')
-const copiedSecret = ref(false)
-const copiedUri = ref(false)
+
+const maskedTotpSecret = computed(() => {
+  const secret = setupForm.value.totpSecret.trim()
+  if (!secret) return '••••••••••••'
+  if (secret.length <= 4) return '*'.repeat(secret.length)
+  return `${secret.slice(0, 2)}${'*'.repeat(Math.max(secret.length - 4, 4))}${secret.slice(-2)}`
+})
 
 const setupTotpUri = computed(() => {
   const secret = setupForm.value.totpSecret.trim()
@@ -478,6 +507,15 @@ function generateTotpSecret() {
   return secret
 }
 
+function generateRecoveryCodes() {
+  const codes = []
+  for (let i = 0; i < 8; i += 1) {
+    const value = Math.floor(100000 + Math.random() * 900000)
+    codes.push(`TML-${String(value)}`)
+  }
+  return codes
+}
+
 function generateSetupTotpSecret() {
   copiedSecret.value = false
   copiedUri.value = false
@@ -516,6 +554,14 @@ function copySetupUri() {
   copyText(setupTotpUri.value, 'uri')
 }
 
+function copyRecoveryCodes() {
+  if (!backupCodes.value.length) {
+    return
+  }
+
+  navigator.clipboard.writeText(backupCodes.value.join('\n'))
+}
+
 function authHeaders() {
   const token = sessionStorage.getItem('menu-admin-token')
   return {
@@ -546,15 +592,41 @@ function loadMenuItems() {
     })
 }
 
+async function fetchSetupStatus() {
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/setup-status`)
+    if (!response.ok) {
+      throw new Error('unable to fetch setup status')
+    }
+
+    const data = await response.json().catch(() => ({}))
+    setupStatus.value = {
+      hasAdmin: Boolean(data.hasAdmin),
+      canCreateUser: Boolean(data.canCreateUser),
+      defaultRole: data.defaultRole || 'viewer',
+      activationRequired: Boolean(data.activationRequired),
+    }
+    if (setupStatus.value.hasAdmin) {
+      setupTab.value = 'create-user'
+    }
+  } catch {
+    setupStatus.value = { hasAdmin: false, canCreateUser: false, defaultRole: 'viewer', activationRequired: true }
+  }
+}
+
 function beginSetupFlow() {
   setupMode.value = true
+  setupTab.value = setupStatus.value.hasAdmin ? 'create-user' : 'first-admin'
   setupMessage.value = ''
   errorMessage.value = ''
   showSetupTotpQr.value = false
+  showSetupReveal.value = false
   setupForm.value = {
     username: '',
     password: '',
     confirmPassword: '',
+    activationCode: '',
+    role: 'viewer',
     totpEnabled: false,
     totpSecret: generateTotpSecret(),
     totpVerifyPrevious: '',
@@ -567,10 +639,13 @@ function cancelSetupFlow() {
   setupMessage.value = ''
   errorMessage.value = ''
   showSetupTotpQr.value = false
+  showSetupReveal.value = false
   setupForm.value = {
     username: '',
     password: '',
     confirmPassword: '',
+    activationCode: '',
+    role: 'viewer',
     totpEnabled: false,
     totpSecret: '',
     totpVerifyPrevious: '',
@@ -578,8 +653,103 @@ function cancelSetupFlow() {
   }
 }
 
+function returnToLogin() {
+  accountCreatedConfirmation.value = false
+  setupMode.value = false
+  username.value = createdAccount.value.username || ''
+  password.value = ''
+  errorMessage.value = ''
+  setupMessage.value = ''
+}
+
 async function submitSetup() {
-  if (!setupForm.value.username.trim() || !setupForm.value.password || !setupForm.value.confirmPassword) {
+  if (setupTab.value === 'first-admin') {
+    if (!setupForm.value.username.trim() || !setupForm.value.password || !setupForm.value.confirmPassword) {
+      errorMessage.value = 'Username and password are required.'
+      return
+    }
+
+    if (setupForm.value.password.length < 8) {
+      errorMessage.value = 'Password must be at least 8 characters long.'
+      return
+    }
+
+    if (setupForm.value.password !== setupForm.value.confirmPassword) {
+      errorMessage.value = 'Passwords do not match.'
+      return
+    }
+
+    if (setupForm.value.totpEnabled && !setupForm.value.totpSecret.trim()) {
+      errorMessage.value = 'A TOTP secret is required when enabling TOTP.'
+      return
+    }
+
+    if (setupForm.value.totpEnabled) {
+      const secret = setupForm.value.totpSecret.trim()
+      const previous = setupForm.value.totpVerifyPrevious.trim()
+      const current = setupForm.value.totpVerifyCurrent.trim()
+
+      if (!secret || !previous || !current) {
+        errorMessage.value = 'Enter both the previous and current authenticator codes to confirm sync.'
+        return
+      }
+
+      const [expectedCurrent, expectedPrevious] = await getRecentTotpPair(secret)
+
+      if (previous !== expectedPrevious || current !== expectedCurrent) {
+        errorMessage.value = 'The authenticator codes do not match the secret. Please check the app and try again.'
+        return
+      }
+    }
+
+    setupSubmitting.value = true
+    errorMessage.value = ''
+    setupMessage.value = ''
+
+    const isTotpSetup = setupForm.value.totpEnabled
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/setup-admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: setupForm.value.username.trim(),
+          password: setupForm.value.password,
+          role: 'admin',
+          totpEnabled: isTotpSetup,
+          ...(isTotpSetup ? { totpSecret: setupForm.value.totpSecret.trim() } : {}),
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to create the first admin.')
+      }
+
+      setupStatus.value.hasAdmin = true
+      setupStatus.value.canCreateUser = true
+      createdAccount.value = { username: setupForm.value.username.trim(), role: 'admin' }
+      setupMode.value = false
+      showSetupTotpQr.value = false
+      showSetupReveal.value = false
+      if (isTotpSetup) {
+        backupCodes.value = generateRecoveryCodes()
+        showBackupCodesModal.value = true
+      }
+      setupForm.value = { username: '', password: '', confirmPassword: '', activationCode: '', role: 'viewer', totpEnabled: false, totpSecret: '', totpVerifyPrevious: '', totpVerifyCurrent: '' }
+      accountCreatedConfirmation.value = true
+      setupTab.value = 'create-user'
+    } catch (error) {
+      errorMessage.value = error.message || 'Unable to create the first admin.'
+    } finally {
+      setupSubmitting.value = false
+    }
+
+    return
+  }
+
+  if (!setupForm.value.username.trim() || !setupForm.value.password) {
     errorMessage.value = 'Username and password are required.'
     return
   }
@@ -589,32 +759,9 @@ async function submitSetup() {
     return
   }
 
-  if (setupForm.value.password !== setupForm.value.confirmPassword) {
-    errorMessage.value = 'Passwords do not match.'
+  if (!setupForm.value.activationCode.trim()) {
+    errorMessage.value = 'An activation code is required to create a user.'
     return
-  }
-
-  if (setupForm.value.totpEnabled && !setupForm.value.totpSecret.trim()) {
-    errorMessage.value = 'A TOTP secret is required when enabling TOTP.'
-    return
-  }
-
-  if (setupForm.value.totpEnabled) {
-    const secret = setupForm.value.totpSecret.trim()
-    const previous = setupForm.value.totpVerifyPrevious.trim()
-    const current = setupForm.value.totpVerifyCurrent.trim()
-
-    if (!secret || !previous || !current) {
-      errorMessage.value = 'Enter both the previous and current authenticator codes to confirm sync.'
-      return
-    }
-
-    const [expectedCurrent, expectedPrevious] = await getRecentTotpPair(secret)
-
-    if (previous !== expectedPrevious || current !== expectedCurrent) {
-      errorMessage.value = 'The authenticator codes do not match the secret. Please check the app and try again.'
-      return
-    }
   }
 
   setupSubmitting.value = true
@@ -622,41 +769,32 @@ async function submitSetup() {
   setupMessage.value = ''
 
   try {
-    const response = await fetch(`${API_BASE}/api/auth/setup-admin`, {
+    const response = await fetch(`${API_BASE}/api/auth/create-user`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify({
         username: setupForm.value.username.trim(),
         password: setupForm.value.password,
-        role: 'admin',
-        totpEnabled: setupForm.value.totpEnabled,
-        ...(setupForm.value.totpEnabled ? { totpSecret: setupForm.value.totpSecret.trim() } : {}),
+        role: 'viewer',
+        activationCode: setupForm.value.activationCode.trim(),
       }),
     })
 
     const data = await response.json().catch(() => ({}))
 
     if (!response.ok) {
-      throw new Error(data.error || 'Unable to create the first admin.')
+      throw new Error(data.error || 'Unable to create user.')
     }
 
-    setupMessage.value = 'Admin account created. Signing you in...'
-    username.value = setupForm.value.username.trim()
-    password.value = setupForm.value.password
-    showSetupTotpQr.value = false
-    setupForm.value = {
-      username: '',
-      password: '',
-      confirmPassword: '',
-      totpEnabled: false,
-      totpSecret: '',
-      totpVerifyPrevious: '',
-      totpVerifyCurrent: '',
-    }
+    createdAccount.value = { username: setupForm.value.username.trim(), role: 'viewer' }
+    setupForm.value = { username: '', password: '', confirmPassword: '', activationCode: '', role: 'viewer', totpEnabled: false, totpSecret: '', totpVerifyPrevious: '', totpVerifyCurrent: '' }
     setupMode.value = false
-    await handleLogin()
+    setupStatus.value.hasAdmin = true
+    setupTab.value = 'create-user'
+    setupMessage.value = 'User created successfully. They were assigned the viewer role by default.'
+    accountCreatedConfirmation.value = true
   } catch (error) {
-    errorMessage.value = error.message || 'Unable to create the first admin.'
+    errorMessage.value = error.message || 'Unable to create user.'
   } finally {
     setupSubmitting.value = false
   }
@@ -679,7 +817,6 @@ async function handleLogin() {
       body: JSON.stringify({
         username: username.value.trim(),
         password: password.value,
-        ...(requiresTotp.value ? { totpCode: totpCode.value.trim() } : {}),
       }),
     })
 
@@ -690,7 +827,13 @@ async function handleLogin() {
     }
 
     if (data.requiresTotp) {
+      pendingTotpLogin.value = {
+        username: username.value.trim(),
+        password: password.value,
+      }
       requiresTotp.value = true
+      totpModalOpen.value = true
+      totpCode.value = ''
       errorMessage.value = data.message || 'Authenticator code required.'
       return
     }
@@ -700,12 +843,7 @@ async function handleLogin() {
     }
 
     sessionStorage.setItem('menu-admin-token', data.token)
-    accessGranted.value = true
-    requiresTotp.value = false
-    totpCode.value = ''
-    password.value = ''
-    resetForm()
-    loadMenuItems()
+    completeSuccessfulLogin()
   } catch (error) {
     requiresTotp.value = false
     errorMessage.value = error.message || 'Unable to sign in.'
@@ -714,12 +852,77 @@ async function handleLogin() {
   }
 }
 
+async function submitTotpLogin() {
+  if (!pendingTotpLogin.value) {
+    return
+  }
+
+  submitting.value = true
+  errorMessage.value = ''
+
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: pendingTotpLogin.value.username,
+        password: pendingTotpLogin.value.password,
+        totpCode: totpCode.value.trim(),
+        rememberThisBrowser: totpRememberThisBrowser.value,
+      }),
+    })
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok && !data.requiresTotp) {
+      throw new Error(data.error || 'Invalid TOTP code.')
+    }
+
+    if (data.requiresTotp) {
+      errorMessage.value = data.message || 'Authenticator code required.'
+      return
+    }
+
+    if (!data.token) {
+      throw new Error('Login response missing token.')
+    }
+
+    sessionStorage.setItem('menu-admin-token', data.token)
+    totpModalOpen.value = false
+    completeSuccessfulLogin()
+  } catch (error) {
+    errorMessage.value = error.message || 'Unable to verify authenticator code.'
+  } finally {
+    submitting.value = false
+  }
+}
+
+function completeSuccessfulLogin() {
+  accessGranted.value = true
+  requiresTotp.value = false
+  totpCode.value = ''
+  totpRememberThisBrowser.value = false
+  pendingTotpLogin.value = null
+  password.value = ''
+  resetForm()
+  loadMenuItems()
+
+  const redirect = sessionStorage.getItem('auth-return-url') || '/admin'
+  if (redirect && redirect !== '/admin') {
+    router.push(redirect)
+  }
+
+  welcomeModalOpen.value = true
+}
+
 function logoutAdmin() {
   accessGranted.value = false
   requiresTotp.value = false
   username.value = ''
   password.value = ''
   totpCode.value = ''
+  totpRememberThisBrowser.value = false
+  pendingTotpLogin.value = null
   sessionStorage.removeItem('menu-admin-token')
   resetForm()
 }
@@ -793,6 +996,13 @@ async function deleteItem(id) {
 }
 
 onMounted(async () => {
+  const redirectTarget = typeof route.query.returnUrl === 'string' ? route.query.returnUrl : route.query.redirect
+  if (redirectTarget) {
+    sessionStorage.setItem('auth-return-url', redirectTarget)
+  }
+
+  await fetchSetupStatus()
+
   const token = sessionStorage.getItem('menu-admin-token')
   if (!token) {
     return
@@ -811,6 +1021,7 @@ onMounted(async () => {
 
     accessGranted.value = true
     loadMenuItems()
+    welcomeModalOpen.value = true
   } catch {
     sessionStorage.removeItem('menu-admin-token')
     accessGranted.value = false
