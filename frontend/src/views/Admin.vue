@@ -130,7 +130,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const API_URL = import.meta.env.VITE_API_URL?.trim() || new URL('/api/menu', window.location.origin).toString()
+const API_URL = import.meta.env.VITE_API_URL?.trim() || '/api/menu'
 
 const ADMIN_CODE = 'thank-me-later-admin'
 

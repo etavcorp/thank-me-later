@@ -30,42 +30,15 @@ export async function ensureDbSchema(env: Env): Promise<void> {
     throw new Error("D1 database binding is missing.");
   }
 
-  const schemaStatements = [
-    `CREATE TABLE IF NOT EXISTS menu_items (
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS menu_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       price TEXT NOT NULL,
       description TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`,
-    `CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT NOT NULL UNIQUE,
-      name TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-    `CREATE TABLE IF NOT EXISTS bookings (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
-      booking_date TEXT NOT NULL,
-      service_name TEXT NOT NULL,
-      notes TEXT,
-      status TEXT NOT NULL DEFAULT 'pending',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
-    )`,
-    `CREATE TABLE IF NOT EXISTS contact_messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL,
-      message TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-  ];
-
-  for (const statement of schemaStatements) {
-    await env.DB.prepare(statement).run();
-  }
+    )
+  `).run();
 }
 
 export async function seedMenuItemsIfEmpty(env: Env): Promise<void> {
@@ -73,7 +46,7 @@ export async function seedMenuItemsIfEmpty(env: Env): Promise<void> {
     throw new Error("D1 database binding is missing.");
   }
 
-  const countResult = await env.DB.prepare("SELECT COUNT(*) as count FROM menu_items").first<{ count: number }>();
+  const countResult = await env.DB.prepare("SELECT COUNT(*) AS count FROM menu_items").first<{ count: number }>();
   const count = Number(countResult?.count ?? 0);
 
   if (count > 0) {
@@ -135,8 +108,12 @@ export default {
     try {
       if (url.pathname === "/api/health" && request.method === "GET") {
         await ensureDbSchema(env);
-        await env.DB.prepare("SELECT 1 AS ok").first();
-        return jsonResponse({ status: "healthy", db: "connected" });
+        const result = await env.DB.prepare("SELECT 1 AS ok").first<{ ok: number }>();
+        return jsonResponse({
+          status: "healthy",
+          db: "connected",
+          ok: result?.ok === 1,
+        });
       }
 
       if (url.pathname === "/api/menu" && request.method === "GET") {
@@ -241,15 +218,8 @@ export default {
         return jsonResponse({ success: true, id });
       }
 
-      if (url.pathname === "/api/menu/seed" && request.method === "POST") {
-        await ensureDbSchema(env);
-        await seedMenuItemsIfEmpty(env);
-
-        const result = await env.DB.prepare(
-          "SELECT COUNT(*) as count FROM menu_items"
-        ).first<{ count: number }>();
-
-        return jsonResponse({ success: true, seeded: Number(result?.count ?? 0) });
+      if (url.pathname.startsWith("/api/")) {
+        return jsonResponse({ error: "Not found" }, { status: 404 });
       }
 
       return jsonResponse({ error: "Not found" }, { status: 404 });

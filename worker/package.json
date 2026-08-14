@@ -12,7 +12,7 @@
     "npm": "10.9.2"
   },
   "scripts": {
-    "dev": "wrangler dev --local --env local",
+    "dev": "wrangler dev --local",
     "deploy": "wrangler deploy --env prd",
     "deploy:uat": "wrangler deploy --env uat",
     "deploy:prd": "npm --prefix ../frontend install && npm --prefix ../frontend run build && wrangler deploy --env prd",

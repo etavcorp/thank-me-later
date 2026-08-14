@@ -1,59 +1,39 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "thank-me-later-worker-prd",
+  "name": "thank-me-later-worker",
   "main": "./src/index.ts",
-  "compatibility_date": "2024-01-01",
-  "workers_dev": false,
+  "compatibility_date": "2026-08-13",
   "assets": {
     "directory": "../frontend/dist",
-    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": true
+    "run_worker_first": ["/api/*"]
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "thank-me-later-db-prd",
-      "database_id": "8fa8dde7-32d6-4c0e-b066-7b9b8e4e5c9c"
+      "database_name": "thank-me-later-db-local",
+      "database_id": "local"
     }
   ],
+
+  // Environment-specific configurations
   "env": {
-    "local": {
-      "name": "thank-me-later-worker-local",
-      "workers_dev": false,
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_name": "thank-me-later-db-local",
-          "database_id": "local"
-        }
-      ]
-    },
     "uat": {
       "name": "thank-me-later-worker-uat",
-      "workers_dev": false,
       "d1_databases": [
         {
           "binding": "DB",
           "database_name": "thank-me-later-db-uat",
-          "database_id": "b7e782ea-41e0-4122-8831-df236f3a29d5"
+          "database_id": "21ac1c5d-d903-4ee6-9b99-e0d35021c0ce"
         }
       ]
     },
     "prd": {
       "name": "thank-me-later-worker-prd",
-      "workers_dev": false,
-      "assets": {
-        "directory": "../frontend/dist",
-        "binding": "ASSETS",
-        "not_found_handling": "single-page-application",
-        "run_worker_first": true
-      },
       "d1_databases": [
         {
           "binding": "DB",
           "database_name": "thank-me-later-db-prd",
-          "database_id": "8fa8dde7-32d6-4c0e-b066-7b9b8e4e5c9c"
+          "database_id": "5f67cdc8-1965-4910-b61e-52a4c976f110"
         }
       ]
     }
