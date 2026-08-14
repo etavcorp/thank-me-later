@@ -29,34 +29,10 @@ jobs:
               - 'worker/**'
               - '.github/workflows/deploy.yml'
 
-  build_frontend:
-    name: Build frontend assets
-    needs: detect_changes
-    if: ${{ (github.ref == 'refs/heads/uat' || github.ref == 'refs/heads/main') && needs.detect_changes.outputs.frontend == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-
   deploy_uat:
     name: Deploy to UAT
     needs: detect_changes
-    if: ${{ github.ref == 'refs/heads/uat' && needs.detect_changes.outputs.worker == 'true' }}
+    if: ${{ github.ref == 'refs/heads/uat' && (needs.detect_changes.outputs.worker == 'true' || needs.detect_changes.outputs.frontend == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -71,13 +47,10 @@ jobs:
             worker/package-lock.json
             frontend/package-lock.json
 
-      - name: Install worker dependencies
-        working-directory: worker
-        run: npm ci
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
+      - name: Install dependencies
+        run: |
+          cd frontend && npm ci
+          cd ../worker && npm ci
 
       - name: Build frontend
         working-directory: frontend
@@ -98,7 +71,7 @@ jobs:
   deploy_prd:
     name: Deploy to PRD
     needs: detect_changes
-    if: ${{ github.ref == 'refs/heads/main' && needs.detect_changes.outputs.worker == 'true' }}
+    if: ${{ github.ref == 'refs/heads/main' && (needs.detect_changes.outputs.worker == 'true' || needs.detect_changes.outputs.frontend == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -113,13 +86,10 @@ jobs:
             worker/package-lock.json
             frontend/package-lock.json
 
-      - name: Install worker dependencies
-        working-directory: worker
-        run: npm ci
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
+      - name: Install dependencies
+        run: |
+          cd frontend && npm ci
+          cd ../worker && npm ci
 
       - name: Build frontend
         working-directory: frontend
