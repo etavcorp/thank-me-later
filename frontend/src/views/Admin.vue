@@ -201,6 +201,10 @@
         <button @click="logoutAdmin" class="rounded-full border border-zinc-700 px-5 py-2 text-sm uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Log out</button>
       </div>
 
+      <div v-if="isReadOnlyUser" class="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+        Read-only access: you can view the menu, but you cannot add, edit, or delete items.
+      </div>
+
       <div class="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-8">
         <div class="rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/30">
           <div class="flex items-center justify-between mb-6">
@@ -220,7 +224,7 @@
                   </div>
                   <p class="text-zinc-400">{{ item.description }}</p>
                 </div>
-                <div class="flex gap-2 mt-2 md:mt-0">
+                <div v-if="!isReadOnlyUser" class="flex gap-2 mt-2 md:mt-0">
                   <button @click="startEdit(item)" class="rounded-full border border-zinc-700 px-3 py-2 text-xs uppercase tracking-[0.18em] text-zinc-200 hover:border-brand-500 hover:text-brand-400 transition-colors">Edit</button>
                   <button @click="deleteItem(item.id)" class="rounded-full border border-red-700/70 px-3 py-2 text-xs uppercase tracking-[0.18em] text-red-300 hover:border-red-500 hover:text-red-200 transition-colors">Delete</button>
                 </div>
@@ -229,7 +233,7 @@
           </div>
         </div>
 
-        <div class="rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/30">
+        <div v-if="!isReadOnlyUser" class="rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl shadow-black/30">
           <h2 class="text-2xl font-serif text-white mb-6">{{ editingId ? 'Edit menu item' : 'Add new menu item' }}</h2>
 
           <form @submit.prevent="submitForm" class="space-y-4">
@@ -372,6 +376,7 @@ const requiresTotp = ref(false)
 const setupMode = ref(false)
 const setupTab = ref('first-admin')
 const setupStatus = ref({ hasAdmin: false, canCreateUser: false, defaultRole: 'viewer', activationRequired: true })
+const currentUserRole = ref('viewer')
 const setupSubmitting = ref(false)
 const setupMessage = ref('')
 const errorMessage = ref('')
@@ -401,6 +406,8 @@ const setupForm = ref({
   totpVerifyPrevious: '',
   totpVerifyCurrent: '',
 })
+
+const isReadOnlyUser = computed(() => currentUserRole.value === 'viewer')
 
 const maskedTotpSecret = computed(() => {
   const secret = setupForm.value.totpSecret.trim()
@@ -603,14 +610,14 @@ async function fetchSetupStatus() {
     setupStatus.value = {
       hasAdmin: Boolean(data.hasAdmin),
       canCreateUser: Boolean(data.canCreateUser),
-      defaultRole: data.defaultRole || 'viewer',
+      defaultRole: data.defaultRole || 'admin',
       activationRequired: Boolean(data.activationRequired),
     }
     if (setupStatus.value.hasAdmin) {
       setupTab.value = 'create-user'
     }
   } catch {
-    setupStatus.value = { hasAdmin: false, canCreateUser: false, defaultRole: 'viewer', activationRequired: true }
+    setupStatus.value = { hasAdmin: false, canCreateUser: false, defaultRole: 'admin', activationRequired: true }
   }
 }
 
@@ -626,7 +633,7 @@ function beginSetupFlow() {
     password: '',
     confirmPassword: '',
     activationCode: '',
-    role: 'viewer',
+    role: 'admin',
     totpEnabled: false,
     totpSecret: generateTotpSecret(),
     totpVerifyPrevious: '',
@@ -645,7 +652,7 @@ function cancelSetupFlow() {
     password: '',
     confirmPassword: '',
     activationCode: '',
-    role: 'viewer',
+    role: 'admin',
     totpEnabled: false,
     totpSecret: '',
     totpVerifyPrevious: '',
@@ -842,6 +849,7 @@ async function handleLogin() {
       throw new Error('Login response missing token.')
     }
 
+    currentUserRole.value = data.user?.role || data.role || 'viewer'
     sessionStorage.setItem('menu-admin-token', data.token)
     completeSuccessfulLogin()
   } catch (error) {
@@ -887,6 +895,7 @@ async function submitTotpLogin() {
       throw new Error('Login response missing token.')
     }
 
+    currentUserRole.value = data.user?.role || data.role || 'viewer'
     sessionStorage.setItem('menu-admin-token', data.token)
     totpModalOpen.value = false
     completeSuccessfulLogin()
@@ -907,6 +916,10 @@ function completeSuccessfulLogin() {
   resetForm()
   loadMenuItems()
 
+  if (!currentUserRole.value || currentUserRole.value === 'viewer') {
+    welcomeModalOpen.value = true
+  }
+
   const redirect = sessionStorage.getItem('auth-return-url') || '/admin'
   if (redirect && redirect !== '/admin') {
     router.push(redirect)
@@ -918,6 +931,7 @@ function completeSuccessfulLogin() {
 function logoutAdmin() {
   accessGranted.value = false
   requiresTotp.value = false
+  currentUserRole.value = 'viewer'
   username.value = ''
   password.value = ''
   totpCode.value = ''
@@ -1019,12 +1033,15 @@ onMounted(async () => {
       throw new Error('Session expired')
     }
 
+    const meData = await response.json().catch(() => ({}))
+    currentUserRole.value = meData.role || 'viewer'
     accessGranted.value = true
     loadMenuItems()
     welcomeModalOpen.value = true
   } catch {
     sessionStorage.removeItem('menu-admin-token')
     accessGranted.value = false
+    currentUserRole.value = 'viewer'
   }
 })
 </script>

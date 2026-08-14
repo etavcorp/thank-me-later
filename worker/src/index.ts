@@ -652,7 +652,7 @@ export default {
           {
             hasAdmin: Number(count?.count ?? 0) > 0,
             canCreateUser: Number(count?.count ?? 0) > 0,
-            defaultRole: "viewer",
+            defaultRole: "admin",
             activationRequired: true,
           },
           request,
@@ -662,7 +662,7 @@ export default {
       }
 
       if (url.pathname === "/api/auth/me" && request.method === "GET") {
-        const auth = await requireAuth(request, env, ["admin", "editor"]);
+        const auth = await requireAuth(request, env, ["admin", "editor", "viewer"]);
         if (!auth.authenticated) {
           return jsonResponse({ error: auth.error }, request, env, { status: auth.status, headers: { "Cache-Control": "no-store" } });
         }
@@ -754,7 +754,7 @@ export default {
         const activationCode = typeof body.activationCode === "string" ? body.activationCode.trim() : "";
         const expectedActivationCode = (env.AUTH_SECRET || "ACTIVATE-2026").trim();
         const requestedRole = typeof body.role === "string" ? body.role : "viewer";
-        const finalRole = ["admin", "editor", "viewer"].includes(requestedRole) ? "viewer" : "viewer";
+        const finalRole = ["admin", "editor", "viewer"].includes(requestedRole) ? requestedRole : "viewer";
 
         if (!username || !password || password.length < 8) {
           return jsonResponse({ error: "Username and password (minimum 8 chars) are required" }, request, env, { status: 400, headers: { "Cache-Control": "no-store" } });
