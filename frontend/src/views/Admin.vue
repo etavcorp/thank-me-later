@@ -24,7 +24,11 @@
       <p class="text-xs uppercase tracking-[0.35em] text-brand-400 mb-4">Admin access</p>
       <h1 class="text-3xl font-serif text-white mb-6">Menu management</h1>
 
-      <div v-if="!setupMode">
+      <div v-if="!setupStatusReady" class="rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-5 text-sm text-zinc-400">
+        Checking admin access...
+      </div>
+
+      <div v-else-if="!setupMode">
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div>
             <label for="admin-username" class="block text-sm text-zinc-400 mb-2">Username</label>
@@ -375,6 +379,7 @@ const pendingTotpLogin = ref(null)
 const requiresTotp = ref(false)
 const setupMode = ref(false)
 const setupTab = ref('first-admin')
+const setupStatusReady = ref(false)
 const setupStatus = ref({ hasAdmin: false, canCreateUser: false, defaultRole: 'viewer', activationRequired: true })
 const currentUserRole = ref('viewer')
 const setupSubmitting = ref(false)
@@ -619,6 +624,8 @@ async function fetchSetupStatus() {
     }
   } catch {
     setupStatus.value = { hasAdmin: false, canCreateUser: false, defaultRole: 'admin', activationRequired: true }
+  } finally {
+    setupStatusReady.value = true
   }
 }
 
