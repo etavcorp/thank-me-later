@@ -311,7 +311,7 @@
             <p class="text-[10px] uppercase tracking-[0.25em] text-brand-400">Welcome</p>
             <h2 class="mt-2 text-3xl font-serif text-white">Welcome back, {{ username || 'admin' }}.</h2>
           </div>
-          <button type="button" @click="welcomeModalOpen = false" class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Close</button>
+          <button type="button" @click="dismissWelcomeModal()" class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Close</button>
         </div>
 
         <p class="text-zinc-300 mb-6">Here’s the quickest way to get comfortable with the menu editor and your most important controls.</p>
@@ -344,8 +344,8 @@
         </div>
 
         <div class="flex flex-col gap-3 sm:flex-row">
-          <button type="button" @click="welcomeModalOpen = false" class="flex-1 rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Take a quick tour</button>
-          <button type="button" @click="welcomeModalOpen = false" class="flex-1 rounded-full bg-brand-500 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors">Start managing</button>
+          <button type="button" @click="dismissWelcomeModal()" class="flex-1 rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 hover:border-brand-500 hover:text-brand-400 transition-colors">Take a quick tour</button>
+          <button type="button" @click="dismissWelcomeModal()" class="flex-1 rounded-full bg-brand-500 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white hover:bg-brand-600 transition-colors">Start managing</button>
         </div>
       </div>
     </div>
@@ -389,6 +389,7 @@ const createdAccount = ref({ username: '', role: 'viewer' })
 const showBackupCodesModal = ref(false)
 const totpModalOpen = ref(false)
 const welcomeModalOpen = ref(false)
+const WELCOME_MODAL_STORAGE_KEY = 'thank-me-later-welcome-modal-dismissed'
 const backupCodes = ref([])
 const showSetupReveal = ref(false)
 const showSetupTotpQr = ref(false)
@@ -916,7 +917,7 @@ function completeSuccessfulLogin() {
   resetForm()
   loadMenuItems()
 
-  if (!currentUserRole.value || currentUserRole.value === 'viewer') {
+  if (shouldShowWelcomeModal()) {
     welcomeModalOpen.value = true
   }
 
@@ -924,8 +925,15 @@ function completeSuccessfulLogin() {
   if (redirect && redirect !== '/admin') {
     router.push(redirect)
   }
+}
 
-  welcomeModalOpen.value = true
+function dismissWelcomeModal() {
+  welcomeModalOpen.value = false
+  localStorage.setItem(WELCOME_MODAL_STORAGE_KEY, 'true')
+}
+
+function shouldShowWelcomeModal() {
+  return !localStorage.getItem(WELCOME_MODAL_STORAGE_KEY)
 }
 
 function logoutAdmin() {
@@ -1037,7 +1045,9 @@ onMounted(async () => {
     currentUserRole.value = meData.role || 'viewer'
     accessGranted.value = true
     loadMenuItems()
-    welcomeModalOpen.value = true
+    if (shouldShowWelcomeModal()) {
+      welcomeModalOpen.value = true
+    }
   } catch {
     sessionStorage.removeItem('menu-admin-token')
     accessGranted.value = false

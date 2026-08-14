@@ -874,15 +874,19 @@ export default {
           return jsonResponse({ error: "title, price, and description are required" }, request, env, { status: 400, headers: { "Cache-Control": "no-store" } });
         }
 
-        const result = await env.DB.prepare(
+        const existingItem = await env.DB.prepare(
+          "SELECT id FROM menu_items WHERE id = ? LIMIT 1"
+        ).bind(id).first<{ id: number }>();
+
+        if (!existingItem) {
+          return jsonResponse({ error: "Menu item not found" }, request, env, { status: 404, headers: { "Cache-Control": "no-store" } });
+        }
+
+        await env.DB.prepare(
           "UPDATE menu_items SET title = ?, price = ?, description = ? WHERE id = ?"
         )
           .bind(title, price, description, id)
           .run();
-
-        if (result.meta.changes === 0) {
-          return jsonResponse({ error: "Menu item not found" }, request, env, { status: 404, headers: { "Cache-Control": "no-store" } });
-        }
 
         return jsonResponse({ id, title, price, description }, request, env, { headers: { "Cache-Control": "no-store" } });
       }
@@ -900,11 +904,15 @@ export default {
           return jsonResponse({ error: "Valid menu item id is required" }, request, env, { status: 400, headers: { "Cache-Control": "no-store" } });
         }
 
-        const result = await env.DB.prepare("DELETE FROM menu_items WHERE id = ?").bind(id).run();
+        const existingItem = await env.DB.prepare(
+          "SELECT id FROM menu_items WHERE id = ? LIMIT 1"
+        ).bind(id).first<{ id: number }>();
 
-        if (result.meta.changes === 0) {
+        if (!existingItem) {
           return jsonResponse({ error: "Menu item not found" }, request, env, { status: 404, headers: { "Cache-Control": "no-store" } });
         }
+
+        await env.DB.prepare("DELETE FROM menu_items WHERE id = ?").bind(id).run();
 
         return jsonResponse({ success: true, id }, request, env, { headers: { "Cache-Control": "no-store" } });
       }
