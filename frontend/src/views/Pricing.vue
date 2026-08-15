@@ -29,7 +29,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const API_URL = import.meta.env.VITE_API_URL?.trim() || '/api/menu'
+const rawApiUrl = import.meta.env.VITE_API_URL?.trim() || ''
+const API_URL = rawApiUrl ? `${rawApiUrl.replace(/\/$/, '').replace(/\/api\/menu$/, '').replace(/\/api$/, '')}/api/menu` : '/api/menu'
 
 const menuItems = ref([])
 const loading = ref(true)

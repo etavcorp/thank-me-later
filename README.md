@@ -51,9 +51,20 @@ npm run build
 
 Deployment notes
 
+- Production domain: `https://thankmelatercatering.com`
+- UAT domain: `https://uat.thankmelatercatering.com`
 - Production worker: `thank-me-later-worker-prd`
 - UAT worker: `thank-me-later-worker-uat`
 - Local dev worker: `thank-me-later-db-local` (D1 only)
+
+For PRD/UAT bootstrap credentials, set these in Cloudflare as secrets before deploy:
+
+```bash
+wrangler secret put BOOTSTRAP_USERNAME --env prd
+wrangler secret put BOOTSTRAP_PASSWORD --env prd
+wrangler secret put BOOTSTRAP_USERNAME --env uat
+wrangler secret put BOOTSTRAP_PASSWORD --env uat
+```
 
 Run these from the worker directory:
 

@@ -3,6 +3,10 @@ main = "./src/index.ts"
 compatibility_date = "2024-01-01"
 workers_dev = false
 
+[vars]
+APP_ENV = "prd"
+ALLOWED_ORIGINS = "https://thankmelatercatering.com,https://www.thankmelatercatering.com,https://uat.thankmelatercatering.com,https://thank-me-later-worker-prd.etavcorp.workers.dev"
+
 [assets]
 directory = "../frontend/dist"
 binding = "ASSETS"
@@ -12,7 +16,7 @@ run_worker_first = true
 [[d1_databases]]
 binding = "DB"
 database_name = "thank-me-later-db-prd"
-database_id = "8fa8dde7-32d6-4c0e-b066-7b9b8e4e5c9c"
+database_id = "5f67cdc8-1965-4910-b61e-52a4c976f110"
 
 # Local development uses a true localhost-only Miniflare D1 instance.
 # The special local id keeps it off Cloudflare and prevents it from appearing in d1 list.
@@ -29,14 +33,22 @@ database_id = "local"
 name = "thank-me-later-worker-uat"
 workers_dev = false
 
+[env.uat.vars]
+APP_ENV = "uat"
+ALLOWED_ORIGINS = "https://uat.thankmelatercatering.com,https://www.uat.thankmelatercatering.com,https://thank-me-later-worker-uat.etavcorp.workers.dev"
+
 [[env.uat.d1_databases]]
 binding = "DB"
 database_name = "thank-me-later-db-uat"
-database_id = "b7e782ea-41e0-4122-8831-df236f3a29d5"
+database_id = "21ac1c5d-d903-4ee6-9b99-e0d35021c0ce"
 
 [env.prd]
 name = "thank-me-later-worker-prd"
 workers_dev = false
+
+[env.prd.vars]
+APP_ENV = "prd"
+ALLOWED_ORIGINS = "https://thankmelatercatering.com,https://www.thankmelatercatering.com,https://uat.thankmelatercatering.com,https://thank-me-later-worker-prd.etavcorp.workers.dev"
 
 [env.prd.assets]
 directory = "../frontend/dist"
@@ -47,7 +59,7 @@ run_worker_first = true
 [[env.prd.d1_databases]]
 binding = "DB"
 database_name = "thank-me-later-db-prd"
-database_id = "8fa8dde7-32d6-4c0e-b066-7b9b8e4e5c9c"
+database_id = "5f67cdc8-1965-4910-b61e-52a4c976f110"
 
 [build]
 command = "npm install && npm run build"
