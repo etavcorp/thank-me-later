@@ -186,7 +186,7 @@ async function verifyJwtLike(token: string, secret: string): Promise<Record<stri
 
 async function hashPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iterations = 120000;
+  const iterations = 100000;
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
     encoder.encode(password),
