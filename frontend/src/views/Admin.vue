@@ -75,7 +75,6 @@
         <button
           type="button"
           @click="beginSetupFlow"
-          :disabled="setupStatus.hasAdmin && setupTab === 'create-user'"
           class="mt-4 w-full rounded-full border border-zinc-700 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 transition-colors hover:border-brand-500 hover:text-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {{ setupStatus.hasAdmin ? 'Create user' : 'Create first admin' }}
