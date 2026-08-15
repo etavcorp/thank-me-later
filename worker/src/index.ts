@@ -768,12 +768,13 @@ export default {
 
       if (url.pathname === "/api/auth/setup-status" && request.method === "GET") {
         const count = await env.DB.prepare("SELECT COUNT(*) AS count FROM users").first<{ count: number }>();
+        const hasAdmin = Number(count?.count ?? 0) > 0;
         return jsonResponse(
           {
-            hasAdmin: Number(count?.count ?? 0) > 0,
-            canCreateUser: Number(count?.count ?? 0) > 0,
+            hasAdmin,
+            canCreateUser: hasAdmin,
             defaultRole: "admin",
-            activationRequired: true,
+            activationRequired: !hasAdmin,
           },
           request,
           env,
@@ -975,10 +976,6 @@ export default {
           return jsonResponse({ error: "Username and password (minimum 8 chars) are required" }, request, env, { status: 400, headers: { "Cache-Control": "no-store" } });
         }
 
-        if (!activationCode || activationCode !== expectedActivationCode) {
-          return jsonResponse({ error: "A valid activation code is required to create a new user." }, request, env, { status: 400, headers: { "Cache-Control": "no-store" } });
-        }
-
         const existingUser = await env.DB.prepare(
           "SELECT 1 FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1"
         ).bind(username).first();
@@ -987,17 +984,23 @@ export default {
           return jsonResponse({ error: "A user with that username already exists." }, request, env, { status: 409, headers: { "Cache-Control": "no-store" } });
         }
 
+        const hasExistingUsers = await env.DB.prepare("SELECT COUNT(*) AS count FROM users").first<{ count: number }>();
+        const adminUserExists = Number(hasExistingUsers?.count ?? 0) > 0;
+        if (adminUserExists && activationCode && activationCode !== expectedActivationCode) {
+          return jsonResponse({ error: "A valid activation code is required to create a new user." }, request, env, { status: 400, headers: { "Cache-Control": "no-store" } });
+        }
+
         const passwordHash = await hashPassword(password);
         const result = await env.DB.prepare(
           "INSERT INTO users (username, password_hash, role, totp_secret, totp_enabled, activation_code, is_active) VALUES (?, ?, ?, NULL, 0, ?, 1)"
-        ).bind(username, passwordHash, finalRole, activationCode).run();
+        ).bind(username, passwordHash, finalRole, activationCode || null).run();
 
         return jsonResponse(
           {
             id: result.meta.last_row_id ?? null,
             username,
             role: finalRole,
-            activationRequired: true,
+            activationRequired: false,
             totpEnabled: false,
           },
           request,

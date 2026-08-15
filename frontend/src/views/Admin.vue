@@ -207,29 +207,42 @@
     </div>
 
     <div v-else class="mx-auto max-w-7xl">
-      <header class="mb-6 flex items-center justify-between gap-3 rounded-[24px] border border-zinc-800 bg-zinc-900/80 px-4 py-4 shadow-2xl shadow-black/20 md:px-6">
-        <div class="flex items-center gap-3">
+      <header class="mb-6 rounded-[24px] border border-zinc-800 bg-zinc-900/80 px-4 py-4 shadow-2xl shadow-black/20 md:px-6">
+        <div class="relative flex items-center justify-center md:justify-between">
           <button
             type="button"
-            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 text-lg text-zinc-200 lg:hidden"
+            class="mobile-menu-button absolute left-0 top-1/2 z-10 h-11 w-11 -translate-y-1/2 rounded-full border border-zinc-700 bg-zinc-900/70 p-2 text-zinc-200 transition-colors hover:bg-zinc-800/80 focus:outline-none md:hidden"
             @click="mobileSidebarOpen = !mobileSidebarOpen"
+            :aria-expanded="mobileSidebarOpen"
             aria-label="Toggle sidebar"
           >
-            ☰
+            <span class="menu-lines" :class="{ 'is-open': mobileSidebarOpen }" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
           </button>
-          <img src="/tmlclogo.png" alt="Thank Me Later logo" class="h-10 w-auto object-contain brightness-0 invert" />
-          <div class="text-lg font-semibold tracking-[0.2em] text-zinc-100">[ADMIN]</div>
+
+          <div class="flex items-center justify-center gap-3 md:justify-start">
+            <img src="/tmlclogo.png" alt="Thank Me Later logo" class="h-10 w-auto object-contain brightness-0 invert" />
+            <div class="text-lg font-semibold tracking-[0.2em] text-zinc-100">[ADMIN]</div>
+          </div>
+
+          <div class="ml-auto hidden items-center gap-3 md:flex">
+            <span class="text-sm text-zinc-300">Welcome back, {{ currentUsername }}</span>
+            <button @click="logoutAdmin" class="rounded-full border border-zinc-700 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300 transition-colors hover:border-brand-500 hover:text-brand-400">Logout</button>
+          </div>
         </div>
 
-        <div class="flex items-center gap-3">
-          <span class="hidden text-sm text-zinc-300 sm:inline">Welcome back, {{ currentUsername }}</span>
-          <span class="text-sm text-zinc-300 sm:hidden">{{ currentUsername }}</span>
-          <button @click="logoutAdmin" class="rounded-full border border-zinc-700 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300 transition-colors hover:border-brand-500 hover:text-brand-400">Logout</button>
+        <div class="mt-3 flex items-center justify-between gap-3 md:hidden">
+          <span class="truncate text-sm text-zinc-300">{{ currentUsername }}</span>
+          <button @click="logoutAdmin" class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300 transition-colors hover:border-brand-500 hover:text-brand-400">Logout</button>
         </div>
       </header>
 
       <div class="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside
+          id="admin-sidebar-nav"
           :class="mobileSidebarOpen ? 'flex' : 'hidden'"
           class="rounded-[24px] border border-zinc-800 bg-zinc-900/80 p-3 shadow-2xl shadow-black/20 lg:flex"
         >
@@ -517,6 +530,7 @@
               <label class="relative block">
                 <span class="sr-only">Search bookings by reference number</span>
                 <input
+                  id="booking-reference-search"
                   v-model="bookingSearch"
                   type="search"
                   placeholder="Search by reference number"
@@ -656,7 +670,6 @@
                       <div>
                         <div class="flex items-center gap-2">
                           <span class="font-medium text-white">{{ user.username }}</span>
-                          <span class="rounded-full border border-zinc-700 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-zinc-300">{{ user.role }}</span>
                         </div>
                         <div class="mt-2 text-xs text-zinc-400">Created {{ formatDateValue(user.created_at) }}</div>
                       </div>
@@ -814,7 +827,7 @@
     </div>
 
     <div v-if="welcomeModalOpen" class="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-      <div class="w-full max-w-2xl rounded-[30px] border border-zinc-800 bg-zinc-900/95 p-6 shadow-2xl shadow-black/40">
+      <div class="mx-auto w-[calc(100%-2rem)] max-h-[85vh] max-w-2xl overflow-y-auto rounded-[30px] border border-zinc-800 bg-zinc-900/95 p-6 shadow-2xl shadow-black/40">
         <div class="mb-5 flex items-center justify-between">
           <div>
             <p class="text-[10px] uppercase tracking-[0.25em] text-brand-400">Welcome</p>
@@ -853,9 +866,26 @@
         </div>
 
         <div class="flex flex-col gap-3 sm:flex-row">
-          <button type="button" @click="dismissWelcomeModal()" class="flex-1 rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 transition-colors hover:border-brand-500 hover:text-brand-400">Take a quick tour</button>
+          <button type="button" @click="dismissWelcomeModal(); startTour()" class="flex-1 rounded-full border border-zinc-700 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300 transition-colors hover:border-brand-500 hover:text-brand-400">Take a quick tour</button>
           <button type="button" @click="dismissWelcomeModal()" class="flex-1 rounded-full bg-brand-500 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-brand-600">Start managing</button>
         </div>
+      </div>
+    </div>
+
+    <div v-if="tourActive" class="pointer-events-none fixed inset-0 z-[160]">
+      <div v-if="tourTargetRect" class="pointer-events-none absolute rounded-2xl border-2 border-brand-400 bg-brand-500/15 shadow-[0_0_0_9999px_rgba(9,11,18,0.72)]" :style="tourHighlightStyles"></div>
+
+      <div class="pointer-events-auto absolute left-1/2 top-1/2 w-[min(92vw,22rem)] -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-zinc-700 bg-zinc-900/95 p-4 shadow-2xl shadow-black/40" :style="tourTooltipStyles">
+        <p class="mb-2 text-[10px] uppercase tracking-[0.28em] text-brand-400">Step {{ tourStepIndex + 1 }} of {{ tourSteps.length }}</p>
+        <h3 class="text-xl font-serif text-white">{{ activeTourStep.title }}</h3>
+        <p class="mt-3 text-sm text-zinc-300">{{ activeTourStep.description }}</p>
+
+        <div class="mt-5 flex flex-col gap-2 sm:flex-row">
+          <button type="button" @click="previousTourStep" :disabled="tourStepIndex === 0" class="flex-1 rounded-full border border-zinc-700 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-200 transition-colors hover:border-brand-500 hover:text-brand-400 disabled:cursor-not-allowed disabled:opacity-40">Back</button>
+          <button type="button" @click="nextTourStep" class="flex-1 rounded-full bg-brand-500 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-brand-600">{{ tourStepIndex === tourSteps.length - 1 ? 'Finish' : 'Next' }}</button>
+        </div>
+
+        <button type="button" @click="stopTour" class="mt-3 block w-full rounded-full border border-zinc-700 px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-300 transition-colors hover:border-brand-500 hover:text-brand-400">Skip Tour</button>
       </div>
     </div>
   </section>
@@ -938,6 +968,29 @@ const showBackupCodesModal = ref(false)
 const totpModalOpen = ref(false)
 const welcomeModalOpen = ref(false)
 const WELCOME_MODAL_STORAGE_KEY = 'thank-me-later-welcome-modal-dismissed'
+const tourActive = ref(false)
+const tourStepIndex = ref(0)
+const tourTargetRect = ref(null)
+const tourSteps = [
+  {
+    key: 'nav',
+    title: 'Main navigation',
+    description: 'Use the sidebar to jump between the dashboard, menu editor, bookings, and settings.',
+    targetSelector: '#admin-sidebar-nav',
+  },
+  {
+    key: 'layout',
+    title: 'Edit layout',
+    description: 'Use this mobile toggle to customize which dashboard cards are visible on the go.',
+    targetSelector: '#mobile-edit-layout-button',
+  },
+  {
+    key: 'booking-search',
+    title: 'Booking reference search',
+    description: 'Search by reference number here to quickly find a booking and review its details.',
+    targetSelector: '#booking-reference-search',
+  },
+]
 const backupCodes = ref([])
 const showSetupReveal = ref(false)
 const showSetupTotpQr = ref(false)
@@ -1164,6 +1217,36 @@ const topMenuItems = ref([
   { name: 'Lemon Herb Salmon', sales: 21, percentage: 48 },
 ])
 
+const activeTourStep = computed(() => tourSteps[tourStepIndex.value] || null)
+const tourHighlightStyles = computed(() => {
+  const rect = tourTargetRect.value
+  if (!rect) {
+    return { top: '50%', left: '50%', width: '0px', height: '0px', transform: 'translate(-50%, -50%)' }
+  }
+
+  return {
+    top: `${rect.top}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    height: `${rect.height}px`,
+  }
+})
+const tourTooltipStyles = computed(() => {
+  const rect = tourTargetRect.value
+  if (!rect) {
+    return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+  }
+
+  const prefersBelow = rect.top < window.innerHeight * 0.5
+  const top = prefersBelow ? rect.top + rect.height + 18 : rect.top - 220
+  const left = Math.min(Math.max(rect.left + rect.width / 2 - 140, 16), window.innerWidth - 272)
+
+  return {
+    top: `${Math.max(top, 16)}px`,
+    left: `${left}px`,
+    transform: 'none',
+  }
+})
 const isReadOnlyUser = computed(() => currentUserRole.value === 'viewer')
 const currentUsername = computed(() => {
   const token = sessionStorage.getItem('menu-admin-token')
@@ -1560,13 +1643,14 @@ async function fetchSetupStatus() {
     }
 
     const data = await response.json().catch(() => ({}))
+    const hasAdmin = Boolean(data.hasAdmin)
     setupStatus.value = {
-      hasAdmin: Boolean(data.hasAdmin),
+      hasAdmin,
       canCreateUser: Boolean(data.canCreateUser),
       defaultRole: data.defaultRole || 'admin',
-      activationRequired: Boolean(data.activationRequired),
+      activationRequired: !hasAdmin && Boolean(data.activationRequired),
     }
-    if (setupStatus.value.hasAdmin) {
+    if (hasAdmin) {
       setupTab.value = 'create-user'
     }
   } catch {
@@ -1743,24 +1827,19 @@ async function submitSetup() {
     return
   }
 
-  if (!setupForm.value.activationCode.trim()) {
-    errorMessage.value = 'An activation code is required to create a user.'
-    return
-  }
-
   setupSubmitting.value = true
   errorMessage.value = ''
   setupMessage.value = ''
 
   try {
-    const response = await fetch(`${API_BASE}/api/auth/create-user`, {
+    const response = await fetch(`${API_BASE}/api/admin/users`, {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({
         username: setupForm.value.username.trim(),
         password: setupForm.value.password,
         role: 'viewer',
-        activationCode: setupForm.value.activationCode.trim(),
+        totp_enabled: false,
       }),
     })
 
@@ -1926,6 +2005,90 @@ async function completeSuccessfulLogin() {
 function dismissWelcomeModal() {
   welcomeModalOpen.value = false
   localStorage.setItem(WELCOME_MODAL_STORAGE_KEY, 'true')
+}
+
+function updateTourTargetPosition() {
+  if (!tourActive.value || !activeTourStep.value) {
+    tourTargetRect.value = null
+    return
+  }
+
+  const element = document.querySelector(activeTourStep.value.targetSelector)
+  if (!element) {
+    tourTargetRect.value = null
+    return
+  }
+
+  const rect = element.getBoundingClientRect()
+  tourTargetRect.value = {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+  }
+}
+
+function startTour() {
+  tourActive.value = true
+  tourStepIndex.value = 0
+  activeTab.value = 'dashboard'
+  mobileSidebarOpen.value = true
+  mobileDashboardLayoutOpen.value = false
+
+  nextTick(() => {
+    updateTourTargetPosition()
+    if (!tourTargetRect.value) {
+      setTimeout(() => updateTourTargetPosition(), 150)
+    }
+  })
+}
+
+function nextTourStep() {
+  if (tourStepIndex.value >= tourSteps.length - 1) {
+    stopTour()
+    return
+  }
+
+  tourStepIndex.value += 1
+  if (tourStepIndex.value === 1) {
+    activeTab.value = 'dashboard'
+    mobileDashboardLayoutOpen.value = false
+    mobileSidebarOpen.value = true
+  }
+  if (tourStepIndex.value === 2) {
+    activeTab.value = 'bookings'
+    mobileSidebarOpen.value = false
+  }
+  nextTick(() => updateTourTargetPosition())
+}
+
+function previousTourStep() {
+  if (tourStepIndex.value === 0) {
+    return
+  }
+
+  tourStepIndex.value -= 1
+  if (tourStepIndex.value === 0) {
+    activeTab.value = 'dashboard'
+    mobileSidebarOpen.value = true
+  }
+  if (tourStepIndex.value === 1) {
+    activeTab.value = 'dashboard'
+    mobileSidebarOpen.value = true
+  }
+  if (tourStepIndex.value === 2) {
+    activeTab.value = 'bookings'
+    mobileSidebarOpen.value = false
+  }
+  nextTick(() => updateTourTargetPosition())
+}
+
+function stopTour() {
+  tourActive.value = false
+  tourStepIndex.value = 0
+  tourTargetRect.value = null
+  mobileSidebarOpen.value = false
+  mobileDashboardLayoutOpen.value = false
 }
 
 function shouldShowWelcomeModal() {
@@ -2240,6 +2403,22 @@ async function deleteItem(id) {
     formMessage.value = error.message
   }
 }
+
+watch(
+  tourActive,
+  (active) => {
+    if (active) {
+      nextTick(() => updateTourTargetPosition())
+      window.addEventListener('resize', updateTourTargetPosition)
+      window.addEventListener('scroll', updateTourTargetPosition, true)
+      return
+    }
+
+    window.removeEventListener('resize', updateTourTargetPosition)
+    window.removeEventListener('scroll', updateTourTargetPosition, true)
+  },
+  { immediate: true },
+)
 
 onMounted(async () => {
   const redirectTarget = typeof route.query.returnUrl === 'string' ? route.query.returnUrl : route.query.redirect

@@ -10,14 +10,19 @@
             </router-link>
           </div>
           <!-- Hamburger pinned to the far right on mobile -->
-          <div class="absolute right-4 top-1/2 transform -translate-y-1/2 md:hidden z-50">
-            <button ref="menuButton" @click="toggle" :aria-expanded="mobileOpen" aria-label="Toggle menu" class="p-2 rounded-md hover:bg-zinc-800/60 focus:outline-none">
-              <svg v-if="!mobileOpen" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-              </svg>
-              <svg v-else class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
+          <div class="absolute right-4 top-1/2 z-50 -translate-y-1/2 md:hidden">
+            <button
+              ref="menuButton"
+              @click="toggle"
+              :aria-expanded="mobileOpen"
+              aria-label="Toggle menu"
+              class="mobile-menu-button h-11 w-11 rounded-full border border-zinc-700 bg-zinc-900/70 p-2 text-zinc-200 transition-colors hover:bg-zinc-800/80 focus:outline-none"
+            >
+              <span class="menu-lines" :class="{ 'is-open': mobileOpen }" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
             </button>
           </div>
                   <div class="hidden md:flex space-x-8">
@@ -135,6 +140,49 @@ export default {
   width: auto;
   object-fit: contain;
   filter: brightness(0) invert(1);
+}
+
+.mobile-menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.menu-lines {
+  position: relative;
+  display: block;
+  width: 1.5rem;
+  height: 1.1rem;
+}
+
+.menu-lines span {
+  position: absolute;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 9999px;
+  background: currentColor;
+  transition: transform 0.25s ease, opacity 0.2s ease, top 0.25s ease;
+}
+
+.menu-lines span:nth-child(1) { top: 0; }
+.menu-lines span:nth-child(2) { top: 0.48rem; }
+.menu-lines span:nth-child(3) { top: 0.96rem; }
+
+.menu-lines.is-open span:nth-child(1) {
+  top: 0.48rem;
+  transform: rotate(45deg);
+}
+
+.menu-lines.is-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-lines.is-open span:nth-child(3) {
+  top: 0.48rem;
+  transform: rotate(-45deg);
 }
 
 @media (min-width: 768px) {
