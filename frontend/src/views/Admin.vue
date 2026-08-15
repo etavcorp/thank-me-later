@@ -1,5 +1,7 @@
 <template>
-  <section class="min-h-screen bg-zinc-950 px-4 pb-16 pt-28 text-zinc-200 md:px-6 lg:px-8">
+  <section
+    :class="accessGranted ? 'min-h-screen bg-zinc-950 px-4 pb-16 pt-4 text-zinc-200 md:px-6 md:pt-6 lg:px-8' : 'min-h-screen bg-zinc-950 px-4 pb-16 pt-28 text-zinc-200 md:px-6 lg:px-8'"
+  >
     <div
       v-if="toastMessage"
       class="fixed bottom-5 right-5 z-[130] rounded-full border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-medium text-emerald-100 shadow-lg shadow-black/20"
@@ -29,7 +31,7 @@
 
     <div v-else-if="!accessGranted" class="mx-auto max-w-md rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-8 shadow-2xl shadow-black/30">
       <p class="mb-4 text-xs uppercase tracking-[0.35em] text-brand-400">Admin access</p>
-      <h1 class="mb-6 text-3xl font-serif text-white">Admin Access</h1>
+      <h1 class="mb-6 text-3xl font-serif text-white">Welcome</h1>
 
       <div v-if="!setupStatusReady" class="rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-5 text-sm text-zinc-400">
         Checking admin access...
