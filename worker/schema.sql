@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
   totp_enabled INTEGER NOT NULL DEFAULT 0,
   activation_code TEXT,
   is_active INTEGER NOT NULL DEFAULT 1,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  layout_preferences TEXT DEFAULT '{}'
 );
 
 CREATE TABLE IF NOT EXISTS bookings (

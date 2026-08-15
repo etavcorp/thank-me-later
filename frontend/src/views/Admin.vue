@@ -253,29 +253,81 @@
             <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
                 <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">Command center</p>
-                <h2 class="text-4xl font-serif text-white">At a glance</h2>
+                <h2 class="text-4xl font-serif text-white">At A Glance</h2>
               </div>
-              <div class="rounded-full border border-brand-500/50 bg-brand-500/10 px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-brand-300">
-                Live overview
+              <div class="flex items-center gap-2">
+                <div class="rounded-full border border-brand-500/50 bg-brand-500/10 px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-brand-300">
+                  Live overview
+                </div>
               </div>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <div v-for="card in dashboardCards" :key="card.label" class="group relative overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-950/70 p-5 shadow-xl shadow-black/20 transition-transform duration-300 hover:-translate-y-1">
+            <div v-if="isMobileDashboardView && mobileDashboardLayoutOpen" class="rounded-[24px] border border-zinc-800 bg-zinc-950/80 p-4 shadow-xl shadow-black/20">
+              <div class="mb-3 flex items-center justify-between">
+                <h3 class="text-sm uppercase tracking-[0.25em] text-zinc-300">Dashboard layout</h3>
+                <span class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Drag to reorder</span>
+              </div>
+              <div class="space-y-2">
+                <div
+                  v-for="cardConfig in mobileDashboardConfig"
+                  :key="cardConfig.key"
+                  draggable="true"
+                  @dragstart="onDashboardCardDragStart(cardConfig.key)"
+                  @dragover.prevent
+                  @drop="onDashboardCardDrop(cardConfig.key)"
+                  class="flex items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/80 px-3 py-2"
+                >
+                  <label class="flex cursor-pointer items-center gap-3 text-sm text-zinc-200">
+                    <input v-model="cardConfig.visible" type="checkbox" class="h-4 w-4 rounded border-zinc-700 bg-zinc-950 text-brand-500 focus:ring-brand-500" />
+                    <span>{{ cardConfig.label }}</span>
+                  </label>
+                  <span class="cursor-grab text-zinc-500 active:cursor-grabbing">⋮⋮</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              @click="mobileDashboardLayoutOpen = !mobileDashboardLayoutOpen"
+              class="fixed bottom-4 left-1/2 z-50 block -translate-x-1/2 rounded-full border border-brand-500/60 bg-brand-500/10 px-4 py-3 text-[10px] uppercase tracking-[0.22em] text-brand-200 shadow-lg shadow-brand-500/10 backdrop-blur-sm transition-colors hover:border-brand-400 hover:text-brand-100 md:hidden"
+            >
+              {{ mobileDashboardLayoutOpen ? 'Close editor' : 'Edit Layout' }}
+            </button>
+
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4" :class="isMobileDashboardView ? 'grid-cols-1' : ''">
+              <div
+                v-for="card in visibleDesktopDashboardCards"
+                :key="card.key"
+                class="group relative overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-950/70 p-5 shadow-xl shadow-black/20 transition-transform duration-300 hover:-translate-y-1"
+              >
                 <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-500 via-violet-500 to-amber-400"></div>
+
                 <div class="mb-4 flex items-center justify-between">
                   <span class="text-sm text-zinc-400">{{ card.label }}</span>
-                  <span class="rounded-full border border-zinc-700 bg-zinc-900/80 px-2 py-1 text-xs text-brand-300">{{ card.trend }}</span>
+                  <span v-if="card.key !== 'orders-today' && card.key !== 'new-booking-count' && card.key !== 'new-order-queue'" class="rounded-full border border-zinc-700 bg-zinc-900/80 px-2 py-1 text-xs text-brand-300">
+                    {{ card.trend }}
+                  </span>
                 </div>
-                <div class="text-3xl font-semibold text-white">{{ card.value }}</div>
-                <p class="mt-2 text-sm text-zinc-400">{{ card.caption }}</p>
+
+                <div v-if="card.key === 'orders-today'" class="mt-4">
+                  <div class="coming-soon-indicator">Coming Soon</div>
+                </div>
+
+                <div v-else-if="card.key === 'new-booking-count'" class="mt-4">
+                  <div class="text-3xl font-semibold text-white">{{ newBookingCount }}</div>
+                </div>
+
+                <div v-else class="text-3xl font-semibold text-white">{{ card.value }}</div>
+                <p v-if="card.key !== 'orders-today' && card.key !== 'new-booking-count'" class="mt-2 text-sm text-zinc-400">
+                  {{ card.caption }}
+                </p>
               </div>
             </div>
 
             <div class="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
               <div class="rounded-[28px] border border-zinc-800 bg-zinc-950/70 p-6 shadow-2xl shadow-black/30">
                 <div class="mb-5 flex items-center justify-between">
-                  <h3 class="text-xl font-serif text-white">Recent booking requests feed</h3>
+                  <h3 class="text-xl font-serif text-white">Recent Booking Requests Feed</h3>
                   <span class="text-xs uppercase tracking-[0.2em] text-zinc-500">Latest inquiries</span>
                 </div>
 
@@ -303,26 +355,18 @@
 
               <div class="rounded-[28px] border border-zinc-800 bg-zinc-950/70 p-6 shadow-2xl shadow-black/30">
                 <div class="mb-5 flex items-center justify-between">
-                  <h3 class="text-xl font-serif text-white">Quick status</h3>
-                  <span class="rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-emerald-300">Healthy</span>
+                  <h3 class="text-xl font-serif text-white">New Order Queue</h3>
+                  <span class="rounded-full bg-amber-500/15 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-amber-300">Coming Soon</span>
                 </div>
-
-                <div class="space-y-4 text-sm">
-                  <div class="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/80 px-3 py-3">
-                    <span class="text-zinc-400">Site status</span>
-                    <span class="font-medium text-emerald-300">Operational</span>
-                  </div>
-                  <div class="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/80 px-3 py-3">
-                    <span class="text-zinc-400">D1 sync</span>
-                    <span class="font-medium text-brand-300">Connected</span>
-                  </div>
-                  <div class="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/80 px-3 py-3">
-                    <span class="text-zinc-400">Booking flow</span>
-                    <span class="font-medium text-amber-300">External</span>
-                  </div>
-                  <div class="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/80 px-3 py-3">
-                    <span class="text-zinc-400">Security</span>
-                    <span class="font-medium text-white">{{ settingsForm.totpEnabled ? 'TOTP on' : 'TOTP off' }}</span>
+                <div class="relative overflow-hidden rounded-[22px] border border-zinc-800 bg-zinc-950/60 p-6 text-center">
+                  <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(139,92,246,0.18),_transparent_55%)]"></div>
+                  <div class="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand-500/30 animate-pulse"></div>
+                  <div class="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-500/30 animate-ping"></div>
+                  <div class="relative z-10">
+                    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-brand-500/40 bg-brand-500/10 text-2xl shadow-lg shadow-brand-500/20">📦</div>
+                    <p class="mb-2 text-[10px] uppercase tracking-[0.35em] text-brand-400">ORDERS</p>
+                    <h2 class="text-3xl font-serif text-white">Coming Soon</h2>
+                    <p class="mx-auto mt-3 max-w-md text-sm text-zinc-400">We’re building the live order console, fulfillment workflow, and customer updates experience.</p>
                   </div>
                 </div>
               </div>
@@ -333,7 +377,7 @@
             <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">Menu</p>
-                <h1 class="text-4xl font-serif text-white">Manage menu</h1>
+                <h1 class="text-4xl font-serif text-white">Manage Menu</h1>
               </div>
             </div>
 
@@ -417,7 +461,7 @@
             <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div>
                 <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">Analytics</p>
-                <h2 class="text-4xl font-serif text-white">Traffic overview</h2>
+                <h2 class="text-4xl font-serif text-white">Traffic Overview</h2>
               </div>
               <div class="rounded-full border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300">
                 7 day window
@@ -465,15 +509,29 @@
                 <h2 class="text-4xl font-serif text-white">Bookings</h2>
               </div>
               <div class="rounded-full border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300">
-                {{ bookingList.length }} entries
+                {{ filteredBookings.length }} entries
               </div>
             </div>
 
+            <div class="rounded-[22px] border border-zinc-800 bg-zinc-950/70 p-3 shadow-xl shadow-black/20">
+              <label class="relative block">
+                <span class="sr-only">Search bookings by reference number</span>
+                <input
+                  v-model="bookingSearch"
+                  type="search"
+                  placeholder="Search by reference number"
+                  class="w-full rounded-2xl border border-zinc-700 bg-zinc-900/80 px-4 py-3 pr-10 text-sm text-white placeholder:text-zinc-500 focus:border-brand-500 focus:outline-none"
+                />
+                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-zinc-500">⌕</span>
+              </label>
+            </div>
+
             <div class="overflow-hidden rounded-[28px] border border-zinc-800 bg-zinc-950/70 shadow-2xl shadow-black/30">
-              <div class="overflow-x-auto">
+              <div class="hidden overflow-x-auto md:block">
                 <table class="min-w-full text-left text-sm text-zinc-300">
                   <thead class="border-b border-zinc-800 bg-zinc-900/80 text-[10px] uppercase tracking-[0.22em] text-zinc-400">
                     <tr>
+                      <th class="px-4 py-3">Reference</th>
                       <th class="px-4 py-3">Name</th>
                       <th class="px-4 py-3">Event</th>
                       <th class="px-4 py-3">Date</th>
@@ -483,12 +541,17 @@
                   </thead>
                   <tbody>
                     <tr v-if="bookingLoading" class="border-b border-zinc-800">
-                      <td colspan="5" class="px-4 py-10 text-center text-zinc-400">Loading bookings...</td>
+                      <td colspan="6" class="px-4 py-10 text-center text-zinc-400">Loading bookings...</td>
                     </tr>
-                    <tr v-else-if="bookingList.length === 0" class="border-b border-zinc-800">
-                      <td colspan="5" class="px-4 py-10 text-center text-zinc-400">No booking submissions yet.</td>
+                    <tr v-else-if="filteredBookings.length === 0" class="border-b border-zinc-800">
+                      <td colspan="6" class="px-4 py-10 text-center text-zinc-400">No booking submissions match that reference number.</td>
                     </tr>
-                    <tr v-for="booking in bookingList" :key="booking.id" class="border-b border-zinc-800 last:border-b-0 transition-colors hover:bg-white/5">
+                    <tr v-for="booking in filteredBookings" :key="booking.id" class="border-b border-zinc-800 last:border-b-0 transition-colors hover:bg-white/5">
+                      <td class="px-4 py-4 align-top">
+                        <div class="inline-flex rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-brand-200">
+                          {{ booking.reference_number || '—' }}
+                        </div>
+                      </td>
                       <td class="px-4 py-4 align-top">
                         <div class="font-medium text-white">{{ booking.name }}</div>
                         <div class="mt-1 text-xs text-zinc-400">{{ booking.phone }} · {{ booking.email }}</div>
@@ -513,6 +576,57 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <div class="space-y-3 p-3 md:hidden">
+                <div v-if="bookingLoading" class="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-center text-sm text-zinc-400">
+                  Loading bookings...
+                </div>
+                <div v-else-if="filteredBookings.length === 0" class="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-center text-sm text-zinc-400">
+                  No booking submissions match that reference number.
+                </div>
+
+                <div v-else v-for="booking in filteredBookings" :key="booking.id" class="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 shadow-lg shadow-black/10">
+                  <div class="mb-3 flex items-start justify-between gap-3">
+                    <div class="inline-flex rounded-full border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-200">
+                      {{ booking.reference_number || '—' }}
+                    </div>
+                    <select
+                      :value="booking.status"
+                      @change="updateBookingStatus(booking.id, $event.target.value)"
+                      class="rounded-xl border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-[10px] uppercase tracking-[0.15em] text-white outline-none focus:border-brand-500"
+                    >
+                      <option v-for="option in bookingStatusOptions" :key="option" :value="option">{{ option }}</option>
+                    </select>
+                  </div>
+
+                  <div class="space-y-2 text-sm text-zinc-300">
+                    <div>
+                      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Name</p>
+                      <p class="mt-1 font-medium text-white">{{ booking.name }}</p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Event</p>
+                      <p class="mt-1 text-white">{{ booking.type }}</p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Date</p>
+                      <p class="mt-1 text-white">{{ formatDateValue(booking.date) }}</p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Guests</p>
+                      <p class="mt-1 text-white">{{ booking.guests }}</p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Contact</p>
+                      <p class="mt-1 text-zinc-300">{{ booking.phone }} · {{ booking.email }}</p>
+                    </div>
+                  </div>
+
+                  <button type="button" @click="selectedBooking = booking" class="mt-4 text-left text-[10px] uppercase tracking-[0.2em] text-brand-300 hover:text-brand-200">
+                    View notes
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -747,6 +861,43 @@
   </section>
 </template>
 
+<style scoped>
+.coming-soon-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(167, 139, 250, 0.5);
+  background: rgba(99, 102, 241, 0.12);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(196 181 253);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.15), 0 0 25px rgba(139, 92, 246, 0.22);
+  animation: comingSoonPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes comingSoonPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.92;
+    box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.15), 0 0 18px rgba(139, 92, 246, 0.18);
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 1;
+    box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.3), 0 0 30px rgba(168, 85, 247, 0.3);
+  }
+}
+
+@media (max-width: 767px) {
+  .coming-soon-indicator {
+    letter-spacing: 0.18em;
+  }
+}
+</style>
+
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -827,8 +978,17 @@ const settingsError = ref('')
 const settingsQrDataUrl = ref('')
 const bookingList = ref([])
 const bookingLoading = ref(false)
+const bookingSearch = ref('')
 const selectedBooking = ref(null)
 const bookingStatusOptions = ['New', 'Contacted', 'Booked', 'Declined']
+const filteredBookings = computed(() => {
+  const searchTerm = bookingSearch.value.trim().toLowerCase()
+  if (!searchTerm) {
+    return bookingList.value
+  }
+
+  return bookingList.value.filter((booking) => String(booking.reference_number || '').toLowerCase().includes(searchTerm))
+})
 const userList = ref([])
 const userLoading = ref(false)
 const currentUserId = ref(null)
@@ -837,12 +997,149 @@ const adminUserSubmitting = ref(false)
 const adminUserMessage = ref('')
 const adminUserError = ref('')
 
+const isMobileDashboardView = ref(window.innerWidth < 768)
+const mobileDashboardLayoutOpen = ref(false)
+const dashboardCardDragKey = ref(null)
+const MOBILE_DASHBOARD_LAYOUT_KEY = 'thank-me-later-mobile-dashboard-layout'
+
+const defaultMobileDashboardConfig = [
+  { key: 'menu-items', label: 'Menu Items', visible: true, order: 0 },
+  { key: 'active-accounts', label: 'Active Accounts', visible: true, order: 1 },
+  { key: 'orders-today', label: 'Orders Today', visible: true, order: 2 },
+  { key: 'new-booking-count', label: 'New Booking Count', visible: true, order: 3 },
+]
+
+function normalizeDashboardLayoutConfig(layout) {
+  if (!Array.isArray(layout) || layout.length === 0) {
+    return null
+  }
+
+  const merged = defaultMobileDashboardConfig.map((defaultItem) => {
+    const savedItem = layout.find((item) => item.key === defaultItem.key)
+    return {
+      ...defaultItem,
+      ...savedItem,
+      visible: savedItem ? Boolean(savedItem.visible) : defaultItem.visible,
+      order: typeof savedItem?.order === 'number' ? savedItem.order : defaultItem.order,
+    }
+  })
+
+  return merged.sort((a, b) => a.order - b.order)
+}
+
+function loadMobileDashboardConfig() {
+  try {
+    const stored = localStorage.getItem(MOBILE_DASHBOARD_LAYOUT_KEY)
+    if (!stored) {
+      return [...defaultMobileDashboardConfig]
+    }
+
+    const parsed = JSON.parse(stored)
+    const normalized = normalizeDashboardLayoutConfig(parsed)
+    if (normalized) {
+      return normalized
+    }
+
+    return [...defaultMobileDashboardConfig]
+  } catch {
+    return [...defaultMobileDashboardConfig]
+  }
+}
+
+const mobileDashboardConfig = ref(loadMobileDashboardConfig())
+
+watch(
+  mobileDashboardConfig,
+  () => {
+    persistMobileDashboardConfig()
+  },
+  { deep: true },
+)
+
+const newBookingCount = computed(() => {
+  return bookingList.value.filter((booking) => String(booking.status ?? '').trim() === 'New').length
+})
+
+const dashboardCardFactory = {
+  'menu-items': () => ({ key: 'menu-items', label: 'Menu Items', value: String(menuItems.value.length || 12), trend: '+4%', caption: 'Curated dishes currently active' }),
+  'active-accounts': () => ({ key: 'active-accounts', label: 'Active Accounts', value: String(userList.value.length || 1), trend: 'Live', caption: 'Operational team accounts connected' }),
+  'orders-today': () => ({ key: 'orders-today', label: 'Orders Today', value: '', trend: '', caption: '' }),
+  'new-booking-count': () => ({ key: 'new-booking-count', label: 'New Booking Count', value: String(newBookingCount.value), trend: '', caption: '' }),
+}
+
 const dashboardCards = computed(() => [
-  { label: 'Menu items', value: String(menuItems.value.length || 12), trend: '+4%', caption: 'Curated dishes currently active', },
-  { label: 'Active Accounts', value: String(userList.value.length || 1), trend: 'Live', caption: 'Operational team accounts connected', },
-  { label: 'Orders today', value: '18', trend: '+12%', caption: 'Incoming orders in the queue', },
-  { label: 'System activity', value: '96%', trend: 'Stable', caption: 'Health score across main workflows', },
+  dashboardCardFactory['menu-items'](),
+  dashboardCardFactory['active-accounts'](),
+  dashboardCardFactory['orders-today'](),
+  dashboardCardFactory['new-booking-count'](),
 ])
+
+const visibleDesktopDashboardCards = computed(() => {
+  if (isMobileDashboardView.value) {
+    return mobileDashboardConfig.value
+      .filter((card) => card.visible)
+      .sort((a, b) => a.order - b.order)
+      .map((card) => dashboardCardFactory[card.key]())
+  }
+
+  return dashboardCards.value
+})
+
+async function persistMobileDashboardConfig() {
+  const normalizedLayout = mobileDashboardConfig.value.map((card) => ({
+    key: card.key,
+    label: card.label,
+    visible: Boolean(card.visible),
+    order: Number(card.order) || 0,
+  }))
+
+  localStorage.setItem(MOBILE_DASHBOARD_LAYOUT_KEY, JSON.stringify(normalizedLayout))
+
+  const token = sessionStorage.getItem('menu-admin-token')
+  if (!token) {
+    return
+  }
+
+  try {
+    await fetch(`${API_BASE}/api/admin/users/preferences`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      cache: 'no-store',
+      body: JSON.stringify({ layout_preferences: normalizedLayout, layoutPreferences: normalizedLayout }),
+    })
+  } catch (error) {
+    console.error('Failed to save dashboard layout preference:', error)
+  }
+}
+
+async function loadMobileDashboardPreferences() {
+  const token = sessionStorage.getItem('menu-admin-token')
+  if (!token) {
+    return
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/users/preferences`, {
+      cache: 'no-store',
+      headers: authHeaders(),
+    })
+
+    if (!response.ok) {
+      return
+    }
+
+    const data = await response.json().catch(() => ({}))
+    const savedLayout = data?.layout_preferences ?? data?.layoutPreferences ?? null
+    const normalized = normalizeDashboardLayoutConfig(Array.isArray(savedLayout) ? savedLayout : []) ?? normalizeDashboardLayoutConfig(JSON.parse(typeof savedLayout === 'string' ? savedLayout : '[]'))
+
+    if (normalized) {
+      mobileDashboardConfig.value = normalized
+      localStorage.setItem(MOBILE_DASHBOARD_LAYOUT_KEY, JSON.stringify(normalized))
+    }
+  } catch (error) {
+    console.warn('Unable to load saved dashboard layout preference:', error)
+  }
+}
 
 const recentBookingsFeed = computed(() => {
   return [...bookingList.value]
@@ -891,6 +1188,37 @@ const currentUsername = computed(() => {
 })
 const tabLabel = computed(() => tabs.find((tab) => tab.key === activeTab.value)?.label || 'Dashboard')
 const TRUSTED_DEVICE_STORAGE_KEY = 'thank-me-later-trusted-device-token'
+
+function onDashboardCardDragStart(key) {
+  dashboardCardDragKey.value = key
+}
+
+function onDashboardCardDrop(targetKey) {
+  const sourceKey = dashboardCardDragKey.value
+  if (!sourceKey || !targetKey || sourceKey === targetKey) {
+    dashboardCardDragKey.value = null
+    return
+  }
+
+  const items = [...mobileDashboardConfig.value]
+  const sourceIndex = items.findIndex((card) => card.key === sourceKey)
+  const targetIndex = items.findIndex((card) => card.key === targetKey)
+
+  if (sourceIndex === -1 || targetIndex === -1) {
+    dashboardCardDragKey.value = null
+    return
+  }
+
+  const [moved] = items.splice(sourceIndex, 1)
+  items.splice(targetIndex, 0, moved)
+  items.forEach((card, index) => {
+    card.order = index
+  })
+
+  mobileDashboardConfig.value = items
+  persistMobileDashboardConfig()
+  dashboardCardDragKey.value = null
+}
 
 function getStoredTrustedDeviceToken() {
   return localStorage.getItem(TRUSTED_DEVICE_STORAGE_KEY) || ''
@@ -1953,6 +2281,7 @@ onMounted(async () => {
     await loadMenuItems()
     await loadBookings()
     await loadUsers()
+    await loadMobileDashboardPreferences()
     if (shouldShowWelcomeModal()) {
       welcomeModalOpen.value = true
     }

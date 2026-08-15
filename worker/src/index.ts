@@ -396,6 +396,7 @@ export async function ensureDbSchema(env: Env): Promise<void> {
     "activation_code",
     "is_active",
     "created_at",
+    "layout_preferences",
   ];
 
   if (userTableInfo.results === undefined || userTableInfo.results.length === 0) {
@@ -409,7 +410,8 @@ export async function ensureDbSchema(env: Env): Promise<void> {
         totp_enabled INTEGER NOT NULL DEFAULT 0,
         activation_code TEXT,
         is_active INTEGER NOT NULL DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        layout_preferences TEXT DEFAULT '{}'
       )
     `).run();
   } else if (!requiredColumns.every((columnName) => userColumnNames.has(columnName))) {
@@ -428,13 +430,14 @@ export async function ensureDbSchema(env: Env): Promise<void> {
         totp_enabled INTEGER NOT NULL DEFAULT 0,
         activation_code TEXT,
         is_active INTEGER NOT NULL DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        layout_preferences TEXT DEFAULT '{}'
       )
     `).run();
 
     const defaultPasswordHash = await hashPassword("ChangeMe123!");
     await env.DB.prepare(`
-      INSERT INTO users (id, username, password_hash, role, totp_secret, totp_enabled, activation_code, is_active, created_at)
+      INSERT INTO users (id, username, password_hash, role, totp_secret, totp_enabled, activation_code, is_active, created_at, layout_preferences)
       SELECT
         id,
         COALESCE(username, ${legacyUsername}, 'admin') AS username,
@@ -444,7 +447,8 @@ export async function ensureDbSchema(env: Env): Promise<void> {
         COALESCE(totp_enabled, 0) AS totp_enabled,
         NULL AS activation_code,
         1 AS is_active,
-        COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at
+        COALESCE(created_at, CURRENT_TIMESTAMP) AS created_at,
+        '{}' AS layout_preferences
       FROM users_legacy
     `).bind(defaultPasswordHash).run();
 
@@ -784,13 +788,14 @@ export default {
         }
 
         const userRow = await env.DB.prepare(
-          "SELECT id, username, role, totp_secret, totp_enabled FROM users WHERE id = ? LIMIT 1"
+          "SELECT id, username, role, totp_secret, totp_enabled, layout_preferences FROM users WHERE id = ? LIMIT 1"
         ).bind(auth.user.id).first<{
           id: number;
           username: string;
           role: string;
           totp_secret: string | null;
           totp_enabled: number;
+          layout_preferences: string | null;
         }>();
 
         return jsonResponse(
@@ -802,6 +807,8 @@ export default {
             totpEnabled: Number(userRow?.totp_enabled ?? 0) === 1,
             totp_secret: userRow?.totp_secret ?? null,
             totpSecret: userRow?.totp_secret ?? null,
+            layout_preferences: userRow?.layout_preferences ?? "{}",
+            layoutPreferences: userRow?.layout_preferences ?? "{}",
           },
           request,
           env,
@@ -1053,7 +1060,7 @@ export default {
         }
 
         const result = await env.DB.prepare(
-          "SELECT id, name, phone, email, type, guests, date, notes, status, created_at FROM bookings ORDER BY created_at DESC"
+          "SELECT id, reference_number, name, phone, email, type, guests, date, notes, status, created_at FROM bookings ORDER BY created_at DESC"
         ).all();
 
         return jsonResponse(result.results ?? [], request, env, { headers: { "Cache-Control": "no-store" } });
@@ -1126,6 +1133,75 @@ export default {
 
         await env.DB.prepare("DELETE FROM bookings WHERE id = ?").bind(id).run();
         return jsonResponse({ success: true, id }, request, env, { headers: { "Cache-Control": "no-store" } });
+      }
+
+      if (url.pathname === "/api/admin/users/preferences" && request.method === "GET") {
+        const auth = await requireAuth(request, env, ["admin", "editor", "viewer"]);
+        if (!auth.authenticated) {
+          return jsonResponse({ error: auth.error }, request, env, { status: auth.status, headers: { "Cache-Control": "no-store" } });
+        }
+
+        const userRow = await env.DB.prepare(
+          "SELECT layout_preferences FROM users WHERE id = ? LIMIT 1"
+        ).bind(auth.user.id).first<{ layout_preferences: string | null }>();
+
+        return jsonResponse(
+          {
+            layout_preferences: userRow?.layout_preferences ?? "[]",
+            layoutPreferences: userRow?.layout_preferences ?? "[]",
+          },
+          request,
+          env,
+          { headers: { "Cache-Control": "no-store" } }
+        );
+      }
+
+      if (url.pathname === "/api/admin/users/preferences" && request.method === "PUT") {
+        const auth = await requireAuth(request, env, ["admin", "editor", "viewer"]);
+        if (!auth.authenticated) {
+          return jsonResponse({ error: auth.error }, request, env, { status: auth.status, headers: { "Cache-Control": "no-store" } });
+        }
+
+        let body: Record<string, unknown> = {};
+        try {
+          body = await getBodyJson<Record<string, unknown>>(request);
+        } catch {
+          body = {};
+        }
+
+        const rawLayout = body.layout_preferences ?? body.layoutPreferences ?? body.layout ?? "[]";
+        let parsedLayout: unknown = rawLayout;
+
+        if (typeof rawLayout === "string") {
+          try {
+            parsedLayout = JSON.parse(rawLayout);
+          } catch {
+            return jsonResponse({ error: "layout_preferences must be valid JSON" }, request, env, { status: 400, headers: { "Cache-Control": "no-store" } });
+          }
+        }
+
+        const normalizedLayout = Array.isArray(parsedLayout)
+          ? parsedLayout.map((item) => ({
+              key: typeof item?.key === "string" ? item.key : "",
+              label: typeof item?.label === "string" ? item.label : "",
+              visible: item && typeof item === "object" && "visible" in item ? Boolean((item as { visible?: unknown }).visible) : true,
+              order: typeof item?.order === "number" ? item.order : 0,
+            })).filter((item) => item.key)
+          : [];
+
+        const payload = JSON.stringify(normalizedLayout);
+        await env.DB.prepare("UPDATE users SET layout_preferences = ? WHERE id = ?").bind(payload, auth.user.id).run();
+
+        return jsonResponse(
+          {
+            layout_preferences: payload,
+            layoutPreferences: payload,
+            saved: true,
+          },
+          request,
+          env,
+          { headers: { "Cache-Control": "no-store" } }
+        );
       }
 
       if (url.pathname === "/api/admin/users" && request.method === "GET") {
