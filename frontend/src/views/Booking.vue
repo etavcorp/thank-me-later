@@ -9,6 +9,22 @@
     </div>
 
     <div class="bg-zinc-900/80 rounded-[28px] border border-zinc-800 shadow-2xl shadow-black/30 overflow-hidden backdrop-blur-sm" v-fade-scroll>
+      <div v-if="thankYouOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 px-4 backdrop-blur-sm">
+        <div class="w-full max-w-lg rounded-[30px] border border-brand-500/40 bg-zinc-900/95 p-6 shadow-2xl shadow-black/40 sm:p-8">
+          <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-brand-500/10 text-3xl">✨</div>
+          <p class="text-center text-[10px] uppercase tracking-[0.35em] text-brand-400">Thank You</p>
+          <h2 class="mt-4 text-center text-3xl font-serif text-white">Your request has been received</h2>
+          <p class="mt-4 text-center text-zinc-300">We’ll be in touch shortly with availability, menu ideas, and a custom quote for your event.</p>
+          <div class="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 text-center">
+            <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Reference number</p>
+            <p class="mt-2 text-3xl font-semibold tracking-[0.16em] text-brand-300">{{ confirmationReference }}</p>
+          </div>
+          <button @click="thankYouOpen = false" type="button" class="mt-6 w-full rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-brand-600">
+            Close
+          </button>
+        </div>
+      </div>
+
       <div class="grid lg:grid-cols-[0.9fr_1.1fr]">
         <aside class="bg-zinc-950/60 p-8 lg:p-10 border-b lg:border-b-0 lg:border-r border-zinc-800">
           <p class="text-xs uppercase tracking-[0.3em] text-brand-400 mb-5">Event inquiry</p>
@@ -96,7 +112,7 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 
 const form = reactive({
   name: '',
@@ -108,7 +124,61 @@ const form = reactive({
   notes: ''
 })
 
-const submitBooking = () => {
-  alert(`Thanks ${form.name}! Your booking request for ${form.guests} guests on ${form.date} has been submitted. Vince will review and contact you shortly.`)
+const submitting = ref(false)
+const submissionMessage = ref('')
+const submissionError = ref('')
+const thankYouOpen = ref(false)
+const confirmationReference = ref('')
+
+const rawApiUrl = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8787' : window.location.origin)).trim()
+const API_BASE = rawApiUrl.replace(/\/$/, '').replace(/\/api\/$/, '').replace(/\/api$/, '')
+
+const submitBooking = async () => {
+  submissionMessage.value = ''
+  submissionError.value = ''
+
+  submitting.value = true
+
+  try {
+    const response = await fetch(`${API_BASE}/api/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        type: form.type,
+        guests: Number(form.guests),
+        date: form.date,
+        notes: form.notes.trim(),
+      }),
+    })
+
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      throw new Error(data.error || 'Unable to submit your booking request.')
+    }
+
+    confirmationReference.value = data.reference_number || data.referenceNumber || 'REQ-0001'
+    form.name = ''
+    form.phone = ''
+    form.email = ''
+    form.type = 'Corporate Lunch'
+    form.guests = ''
+    form.date = ''
+    form.notes = ''
+    thankYouOpen.value = true
+  } catch (error) {
+    submissionError.value = error.message || 'Unable to submit your booking request.'
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
+
+<style scoped>
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+</style>

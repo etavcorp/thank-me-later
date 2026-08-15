@@ -7,6 +7,21 @@ CREATE TABLE IF NOT EXISTS users (
   totp_enabled INTEGER NOT NULL DEFAULT 0,
   activation_code TEXT,
   is_active INTEGER NOT NULL DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  layout_preferences TEXT DEFAULT '{}'
+);
+
+CREATE TABLE IF NOT EXISTS bookings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reference_number TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  email TEXT NOT NULL,
+  type TEXT NOT NULL,
+  guests INTEGER NOT NULL DEFAULT 1,
+  date TEXT NOT NULL,
+  notes TEXT,
+  status TEXT NOT NULL DEFAULT 'New' CHECK (status IN ('New', 'Contacted', 'Booked', 'Declined')),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -17,11 +32,3 @@ CREATE TABLE IF NOT EXISTS menu_items (
   description TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-
-INSERT OR IGNORE INTO menu_items (title, price, description) VALUES
-  ('Marinade Grilled Lamb Chops', '$35', 'Juicy grilled lamb chops marinated to perfection.'),
-  ('Crispy Fried Chicken', '$22', 'Golden, crispy fried chicken with savory seasoning.'),
-  ('Pan-Seared Salmon', '$28', 'Fresh salmon seared to a delicate crisp finish.'),
-  ('Smothered Turkey Wings', '$24', 'Tender turkey wings slow-cooked and smothered in rich gravy.'),
-  ('Baked Mac & Cheese', '$12', 'Classic baked mac and cheese with creamy, comforting flavor.'),
-  ('Collard Greens', '$10', 'Slow-simmered collard greens with savory southern seasoning.');

@@ -1,7 +1,7 @@
 <template>
   <div class="bg-zinc-950 text-zinc-300 font-sans antialiased min-h-screen flex flex-col">
     <!-- IDENTICAL GLOBAL NAVIGATION -->
-    <nav class="fixed w-full z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
+    <nav v-if="!isAdminRoute" class="fixed w-full z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20 items-center">
           <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center z-50 md:static md:transform-none md:left-0 md:top-0 md:translate-x-0 md:translate-y-0">
@@ -10,14 +10,19 @@
             </router-link>
           </div>
           <!-- Hamburger pinned to the far right on mobile -->
-          <div class="absolute right-4 top-1/2 transform -translate-y-1/2 md:hidden z-50">
-            <button ref="menuButton" @click="toggle" :aria-expanded="mobileOpen" aria-label="Toggle menu" class="p-2 rounded-md hover:bg-zinc-800/60 focus:outline-none">
-              <svg v-if="!mobileOpen" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-              </svg>
-              <svg v-else class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
+          <div class="absolute right-4 top-1/2 z-50 -translate-y-1/2 md:hidden">
+            <button
+              ref="menuButton"
+              @click="toggle"
+              :aria-expanded="mobileOpen"
+              aria-label="Toggle menu"
+              class="mobile-menu-button h-11 w-11 rounded-full border border-zinc-700 bg-zinc-900/70 p-2 text-zinc-200 transition-colors hover:bg-zinc-800/80 focus:outline-none"
+            >
+              <span class="menu-lines" :class="{ 'is-open': mobileOpen }" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
             </button>
           </div>
                   <div class="hidden md:flex space-x-8">
@@ -25,7 +30,6 @@
                       <router-link to="/menu" class="hover:text-brand-500 transition-colors" exact-active-class="font-semibold gold-glow">Menu</router-link>
                       <router-link to="/booking" class="hover:text-brand-500 transition-colors" exact-active-class="font-semibold gold-glow">Book Event</router-link>
                       <router-link to="/contact" class="hover:text-brand-500 transition-colors" exact-active-class="font-semibold gold-glow">Contact</router-link>
-                      <router-link to="/admin" class="hover:text-brand-500 transition-colors" exact-active-class="font-semibold gold-glow">Admin</router-link>
                   </div>
         </div>
       </div>
@@ -55,7 +59,6 @@
                   <router-link @click="mobileOpen = false" to="/menu" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Menu</router-link>
                   <router-link @click="mobileOpen = false" to="/booking" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Book Event</router-link>
                   <router-link @click="mobileOpen = false" to="/contact" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Contact</router-link>
-                  <router-link @click="mobileOpen = false" to="/admin" class="block py-3 px-3 rounded-lg text-lg font-medium text-zinc-100 hover:bg-white/5 transform hover:translate-x-2 transition" exact-active-class="gold-glow">Admin</router-link>
                 </nav>
 
                 <div class="px-4 pb-5 mt-auto">
@@ -78,13 +81,16 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 export default {
   setup() {
+    const route = useRoute()
     const mobileOpen = ref(false)
     const firstLink = ref(null)
     const menuButton = ref(null)
+    const isAdminRoute = computed(() => route.name === 'admin')
 
     function toggle() { mobileOpen.value = !mobileOpen.value }
 
@@ -113,7 +119,7 @@ export default {
       document.body.style.overflow = ''
     })
 
-    return { mobileOpen, toggle, firstLink, menuButton }
+    return { mobileOpen, toggle, firstLink, menuButton, isAdminRoute }
   }
 }
 </script>
@@ -134,6 +140,49 @@ export default {
   width: auto;
   object-fit: contain;
   filter: brightness(0) invert(1);
+}
+
+.mobile-menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.menu-lines {
+  position: relative;
+  display: block;
+  width: 1.5rem;
+  height: 1.1rem;
+}
+
+.menu-lines span {
+  position: absolute;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 9999px;
+  background: currentColor;
+  transition: transform 0.25s ease, opacity 0.2s ease, top 0.25s ease;
+}
+
+.menu-lines span:nth-child(1) { top: 0; }
+.menu-lines span:nth-child(2) { top: 0.48rem; }
+.menu-lines span:nth-child(3) { top: 0.96rem; }
+
+.menu-lines.is-open span:nth-child(1) {
+  top: 0.48rem;
+  transform: rotate(45deg);
+}
+
+.menu-lines.is-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-lines.is-open span:nth-child(3) {
+  top: 0.48rem;
+  transform: rotate(-45deg);
 }
 
 @media (min-width: 768px) {
