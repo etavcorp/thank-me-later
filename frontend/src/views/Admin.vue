@@ -437,6 +437,10 @@ function setStoredTrustedDeviceToken(token) {
   localStorage.removeItem(TRUSTED_DEVICE_STORAGE_KEY)
 }
 
+function clearStoredTrustedDeviceToken() {
+  localStorage.removeItem(TRUSTED_DEVICE_STORAGE_KEY)
+}
+
 function showToast(message) {
   toastMessage.value = message
   window.clearTimeout(showToast.timeoutId)
@@ -994,7 +998,9 @@ function logoutAdmin() {
   totpRememberThisBrowser.value = false
   pendingTotpLogin.value = null
   sessionStorage.removeItem('menu-admin-token')
-  setStoredTrustedDeviceToken('')
+
+  // Preserve the trusted-device token so a remembered 30-day browser can skip TOTP
+  // across a normal logout/login cycle without forcing the user through MFA again.
   resetForm()
 }
 
