@@ -1,5 +1,12 @@
 <template>
   <section class="pt-32 pb-24 max-w-6xl mx-auto px-4 min-h-screen">
+    <div
+      v-if="toastMessage"
+      class="fixed bottom-5 right-5 z-[130] rounded-full border border-emerald-500/40 bg-emerald-500/15 px-4 py-2 text-sm font-medium text-emerald-100 shadow-lg shadow-black/20"
+    >
+      {{ toastMessage }}
+    </div>
+
     <div v-if="accountCreatedConfirmation" class="max-w-lg mx-auto rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-8 shadow-2xl shadow-black/30 text-center">
       <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-brand-500/10 text-3xl">✅</div>
       <p class="text-xs uppercase tracking-[0.35em] text-brand-400 mb-4">Account ready</p>
@@ -386,6 +393,7 @@ const setupSubmitting = ref(false)
 const setupMessage = ref('')
 const errorMessage = ref('')
 const formMessage = ref('')
+const toastMessage = ref('')
 const submitting = ref(false)
 const editingId = ref(null)
 const form = ref({ title: '', price: '', description: '' })
@@ -414,6 +422,28 @@ const setupForm = ref({
 })
 
 const isReadOnlyUser = computed(() => currentUserRole.value === 'viewer')
+const TRUSTED_DEVICE_STORAGE_KEY = 'thank-me-later-trusted-device-token'
+
+function getStoredTrustedDeviceToken() {
+  return localStorage.getItem(TRUSTED_DEVICE_STORAGE_KEY) || ''
+}
+
+function setStoredTrustedDeviceToken(token) {
+  if (token) {
+    localStorage.setItem(TRUSTED_DEVICE_STORAGE_KEY, token)
+    return
+  }
+
+  localStorage.removeItem(TRUSTED_DEVICE_STORAGE_KEY)
+}
+
+function showToast(message) {
+  toastMessage.value = message
+  window.clearTimeout(showToast.timeoutId)
+  showToast.timeoutId = window.setTimeout(() => {
+    toastMessage.value = ''
+  }, 3000)
+}
 
 const maskedTotpSecret = computed(() => {
   const secret = setupForm.value.totpSecret.trim()
@@ -832,6 +862,8 @@ async function handleLogin() {
       body: JSON.stringify({
         username: username.value.trim(),
         password: password.value,
+        trustedDeviceToken: getStoredTrustedDeviceToken(),
+        rememberThisBrowser: totpRememberThisBrowser.value,
       }),
     })
 
@@ -855,6 +887,10 @@ async function handleLogin() {
 
     if (!data.token) {
       throw new Error('Login response missing token.')
+    }
+
+    if (data.trustedDeviceToken) {
+      setStoredTrustedDeviceToken(data.trustedDeviceToken)
     }
 
     currentUserRole.value = data.user?.role || data.role || 'viewer'
@@ -884,6 +920,7 @@ async function submitTotpLogin() {
         username: pendingTotpLogin.value.username,
         password: pendingTotpLogin.value.password,
         totpCode: totpCode.value.trim(),
+        trustedDeviceToken: getStoredTrustedDeviceToken(),
         rememberThisBrowser: totpRememberThisBrowser.value,
       }),
     })
@@ -901,6 +938,10 @@ async function submitTotpLogin() {
 
     if (!data.token) {
       throw new Error('Login response missing token.')
+    }
+
+    if (data.trustedDeviceToken) {
+      setStoredTrustedDeviceToken(data.trustedDeviceToken)
     }
 
     currentUserRole.value = data.user?.role || data.role || 'viewer'
@@ -953,6 +994,7 @@ function logoutAdmin() {
   totpRememberThisBrowser.value = false
   pendingTotpLogin.value = null
   sessionStorage.removeItem('menu-admin-token')
+  setStoredTrustedDeviceToken('')
   resetForm()
 }
 
@@ -1017,8 +1059,9 @@ async function deleteItem(id) {
       throw new Error(data.error || 'Unable to delete item.')
     }
 
+    menuItems.value = menuItems.value.filter((item) => item.id !== id)
     formMessage.value = 'Menu item deleted.'
-    loadMenuItems()
+    showToast('Menu item deleted successfully.')
   } catch (error) {
     formMessage.value = error.message
   }

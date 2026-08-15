@@ -521,9 +521,9 @@ export async function seedMenuItemsIfEmpty(env: Env): Promise<void> {
   ];
 
   const insertSql = "INSERT INTO menu_items (title, price, description) VALUES (?, ?, ?)";
-  await Promise.all(
-    seedItems.map((item) => env.DB.prepare(insertSql).bind(item[0], item[1], item[2]).run())
-  );
+  for (const item of seedItems) {
+    await env.DB.prepare(insertSql).bind(item[0], item[1], item[2]).run();
+  }
 }
 
 async function serveAsset(request: Request, env: Env): Promise<Response | null> {
@@ -569,6 +569,7 @@ export default {
     try {
       await ensureDbSchema(env);
       await seedDefaultAdminIfEmpty(env);
+      await seedMenuItemsIfEmpty(env);
 
       if (url.pathname === "/api/health" && request.method === "GET") {
         const result = await env.DB.prepare("SELECT 1 AS ok").first<{ ok: number }>();
