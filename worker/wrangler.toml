@@ -4,7 +4,7 @@ compatibility_date = "2024-01-01"
 workers_dev = false
 
 [vars]
-APP_ENV = "prd"
+APP_ENV = "local"
 ALLOWED_ORIGINS = "https://thankmelatercatering.com,https://www.thankmelatercatering.com,https://uat.thankmelatercatering.com,https://thank-me-later-worker-prd.etavcorp.workers.dev"
 
 [assets]

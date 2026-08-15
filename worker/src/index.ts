@@ -555,6 +555,11 @@ export async function seedDefaultAdminIfEmpty(env: Env): Promise<void> {
     throw new Error("D1 database binding is missing.");
   }
 
+  const appEnv = (env.APP_ENV ?? "").toLowerCase();
+  if (appEnv !== "local") {
+    return;
+  }
+
   const row = await env.DB.prepare("SELECT COUNT(*) AS count FROM users WHERE role = 'admin'").first<{ count: number }>();
   if (row && Number(row.count) > 0) {
     return;

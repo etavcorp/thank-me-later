@@ -19,6 +19,10 @@
   "env": {
     "uat": {
       "name": "thank-me-later-worker-uat",
+      "vars": {
+        "APP_ENV": "uat",
+        "ALLOWED_ORIGINS": "https://uat.thankmelatercatering.com,https://www.uat.thankmelatercatering.com,https://thank-me-later-worker-uat.etavcorp.workers.dev"
+      },
       "d1_databases": [
         {
           "binding": "DB",
@@ -29,6 +33,10 @@
     },
     "prd": {
       "name": "thank-me-later-worker-prd",
+      "vars": {
+        "APP_ENV": "prd",
+        "ALLOWED_ORIGINS": "https://thankmelatercatering.com,https://www.thankmelatercatering.com,https://uat.thankmelatercatering.com,https://thank-me-later-worker-prd.etavcorp.workers.dev"
+      },
       "d1_databases": [
         {
           "binding": "DB",
