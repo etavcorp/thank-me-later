@@ -1,6 +1,6 @@
 <template>
   <section
-    :class="accessGranted ? 'min-h-screen bg-zinc-950 px-4 pb-16 pt-4 text-zinc-200 md:px-6 md:pt-6 lg:px-8' : 'min-h-screen bg-zinc-950 px-4 pb-16 pt-28 text-zinc-200 md:px-6 lg:px-8'"
+    :class="accessGranted ? 'min-h-screen bg-zinc-950 px-4 pb-0 pt-4 text-zinc-200 md:px-6 md:pt-6 lg:px-8' : 'min-h-screen bg-zinc-950 px-4 pb-16 pt-28 text-zinc-200 md:px-6 lg:px-8'"
   >
     <div
       v-if="toastMessage"
@@ -249,11 +249,83 @@
         </aside>
 
         <main class="min-h-[640px] rounded-[28px] border border-zinc-800 bg-zinc-900/80 p-4 shadow-2xl shadow-black/20 sm:p-6 xl:p-8">
-          <div v-if="activeTab === 'dashboard'" class="flex min-h-[560px] items-center justify-center">
-            <div class="max-w-xl text-center">
-              <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">Overview</p>
-              <h2 class="mb-4 text-4xl font-serif text-white">Welcome back, {{ currentUsername }}.</h2>
-              <p class="text-base text-zinc-300">Your admin dashboard is ready. Use the sidebar to manage menu items, review orders, check traffic, and maintain your bookings.</p>
+          <div v-if="activeTab === 'dashboard'" class="space-y-8">
+            <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">Command center</p>
+                <h2 class="text-4xl font-serif text-white">At a glance</h2>
+              </div>
+              <div class="rounded-full border border-brand-500/50 bg-brand-500/10 px-3 py-2 text-[10px] uppercase tracking-[0.25em] text-brand-300">
+                Live overview
+              </div>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div v-for="card in dashboardCards" :key="card.label" class="group relative overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-950/70 p-5 shadow-xl shadow-black/20 transition-transform duration-300 hover:-translate-y-1">
+                <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-500 via-violet-500 to-amber-400"></div>
+                <div class="mb-4 flex items-center justify-between">
+                  <span class="text-sm text-zinc-400">{{ card.label }}</span>
+                  <span class="rounded-full border border-zinc-700 bg-zinc-900/80 px-2 py-1 text-xs text-brand-300">{{ card.trend }}</span>
+                </div>
+                <div class="text-3xl font-semibold text-white">{{ card.value }}</div>
+                <p class="mt-2 text-sm text-zinc-400">{{ card.caption }}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+              <div class="rounded-[28px] border border-zinc-800 bg-zinc-950/70 p-6 shadow-2xl shadow-black/30">
+                <div class="mb-5 flex items-center justify-between">
+                  <h3 class="text-xl font-serif text-white">Recent booking requests feed</h3>
+                  <span class="text-xs uppercase tracking-[0.2em] text-zinc-500">Latest inquiries</span>
+                </div>
+
+                <div v-if="recentBookingsFeed.length === 0" class="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 text-sm text-zinc-400">
+                  No booking requests yet.
+                </div>
+
+                <div v-else class="space-y-4">
+                  <div v-for="booking in recentBookingsFeed" :key="booking.id" class="flex items-start gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/80 p-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full border border-brand-500/40 bg-brand-500/10 text-lg text-brand-300">
+                      📅
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <p class="font-medium text-white">{{ booking.name }} · {{ booking.type }}</p>
+                        <span class="text-[10px] uppercase tracking-[0.2em] text-brand-300">{{ booking.status }}</span>
+                      </div>
+                      <p class="mt-1 text-sm text-zinc-400">{{ booking.email }} · {{ booking.phone }}</p>
+                      <p class="mt-2 line-clamp-2 text-sm text-zinc-300">{{ booking.notes || 'No notes added yet.' }}</p>
+                    </div>
+                    <span class="whitespace-nowrap text-[10px] uppercase tracking-[0.2em] text-zinc-500">{{ formatDateValue(booking.date) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-[28px] border border-zinc-800 bg-zinc-950/70 p-6 shadow-2xl shadow-black/30">
+                <div class="mb-5 flex items-center justify-between">
+                  <h3 class="text-xl font-serif text-white">Quick status</h3>
+                  <span class="rounded-full bg-emerald-500/15 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-emerald-300">Healthy</span>
+                </div>
+
+                <div class="space-y-4 text-sm">
+                  <div class="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/80 px-3 py-3">
+                    <span class="text-zinc-400">Site status</span>
+                    <span class="font-medium text-emerald-300">Operational</span>
+                  </div>
+                  <div class="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/80 px-3 py-3">
+                    <span class="text-zinc-400">D1 sync</span>
+                    <span class="font-medium text-brand-300">Connected</span>
+                  </div>
+                  <div class="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/80 px-3 py-3">
+                    <span class="text-zinc-400">Booking flow</span>
+                    <span class="font-medium text-amber-300">External</span>
+                  </div>
+                  <div class="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/80 px-3 py-3">
+                    <span class="text-zinc-400">Security</span>
+                    <span class="font-medium text-white">{{ settingsForm.totpEnabled ? 'TOTP on' : 'TOTP off' }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -327,6 +399,224 @@
             </div>
           </div>
 
+          <div v-else-if="activeTab === 'orders'" class="flex min-h-[560px] items-center justify-center">
+            <div class="relative w-full max-w-2xl overflow-hidden rounded-[30px] border border-zinc-800 bg-zinc-950/70 p-10 text-center shadow-2xl shadow-black/30">
+              <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(139,92,246,0.18),_transparent_55%)]"></div>
+              <div class="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand-500/30 animate-pulse"></div>
+              <div class="absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-violet-500/30 animate-ping"></div>
+              <div class="relative z-10">
+                <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-brand-500/40 bg-brand-500/10 text-3xl shadow-lg shadow-brand-500/20">📦</div>
+                <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">Orders</p>
+                <h2 class="text-4xl font-serif text-white">Coming Soon</h2>
+                <p class="mx-auto mt-4 max-w-md text-base text-zinc-400">We’re building the live order console, fulfillment workflow, and customer updates experience.</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="activeTab === 'traffic'" class="space-y-8">
+            <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">Analytics</p>
+                <h2 class="text-4xl font-serif text-white">Traffic overview</h2>
+              </div>
+              <div class="rounded-full border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300">
+                7 day window
+              </div>
+            </div>
+
+            <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+              <div class="rounded-[28px] border border-zinc-800 bg-zinc-950/70 p-6 shadow-2xl shadow-black/30">
+                <div class="mb-6 flex items-center justify-between">
+                  <h3 class="text-xl font-serif text-white">Weekly visitors</h3>
+                  <span class="text-sm text-emerald-300">+18.4% vs last week</span>
+                </div>
+                <div class="flex h-56 items-end gap-3 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                  <div v-for="point in trafficChartData" :key="point.label" class="flex flex-1 flex-col items-center justify-end gap-2">
+                    <div class="w-full rounded-t-2xl bg-gradient-to-t from-brand-500 to-violet-400 transition-all duration-500" :style="{ height: `${point.value}%` }"></div>
+                    <span class="text-[10px] uppercase tracking-[0.2em] text-zinc-500">{{ point.label }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-[28px] border border-zinc-800 bg-zinc-950/70 p-6 shadow-2xl shadow-black/30">
+                <div class="mb-6 flex items-center justify-between">
+                  <h3 class="text-xl font-serif text-white">Top menu items</h3>
+                  <span class="text-xs uppercase tracking-[0.2em] text-zinc-500">This week</span>
+                </div>
+                <div class="space-y-4">
+                  <div v-for="item in topMenuItems" :key="item.name" class="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-3">
+                    <div class="mb-2 flex items-center justify-between text-sm">
+                      <span class="font-medium text-white">{{ item.name }}</span>
+                      <span class="text-brand-300">{{ item.sales }} sales</span>
+                    </div>
+                    <div class="h-2 overflow-hidden rounded-full bg-zinc-800">
+                      <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-violet-400" :style="{ width: `${item.percentage}%` }"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="activeTab === 'bookings'" class="space-y-8">
+            <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">CRM</p>
+                <h2 class="text-4xl font-serif text-white">Bookings</h2>
+              </div>
+              <div class="rounded-full border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300">
+                {{ bookingList.length }} entries
+              </div>
+            </div>
+
+            <div class="overflow-hidden rounded-[28px] border border-zinc-800 bg-zinc-950/70 shadow-2xl shadow-black/30">
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-left text-sm text-zinc-300">
+                  <thead class="border-b border-zinc-800 bg-zinc-900/80 text-[10px] uppercase tracking-[0.22em] text-zinc-400">
+                    <tr>
+                      <th class="px-4 py-3">Name</th>
+                      <th class="px-4 py-3">Event</th>
+                      <th class="px-4 py-3">Date</th>
+                      <th class="px-4 py-3">Guests</th>
+                      <th class="px-4 py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-if="bookingLoading" class="border-b border-zinc-800">
+                      <td colspan="5" class="px-4 py-10 text-center text-zinc-400">Loading bookings...</td>
+                    </tr>
+                    <tr v-else-if="bookingList.length === 0" class="border-b border-zinc-800">
+                      <td colspan="5" class="px-4 py-10 text-center text-zinc-400">No booking submissions yet.</td>
+                    </tr>
+                    <tr v-for="booking in bookingList" :key="booking.id" class="border-b border-zinc-800 last:border-b-0 transition-colors hover:bg-white/5">
+                      <td class="px-4 py-4 align-top">
+                        <div class="font-medium text-white">{{ booking.name }}</div>
+                        <div class="mt-1 text-xs text-zinc-400">{{ booking.phone }} · {{ booking.email }}</div>
+                      </td>
+                      <td class="px-4 py-4 align-top">
+                        <div class="font-medium text-white">{{ booking.type }}</div>
+                        <button type="button" @click="selectedBooking = booking" class="mt-2 text-left text-xs uppercase tracking-[0.18em] text-brand-300 hover:text-brand-200">
+                          View notes
+                        </button>
+                      </td>
+                      <td class="px-4 py-4 align-top text-zinc-200">{{ formatDateValue(booking.date) }}</td>
+                      <td class="px-4 py-4 align-top text-zinc-200">{{ booking.guests }}</td>
+                      <td class="px-4 py-4 align-top">
+                        <select
+                          :value="booking.status"
+                          @change="updateBookingStatus(booking.id, $event.target.value)"
+                          class="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-brand-500"
+                        >
+                          <option v-for="option in bookingStatusOptions" :key="option" :value="option">{{ option }}</option>
+                        </select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="activeTab === 'settings'" class="space-y-8">
+            <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">IAM</p>
+                <h2 class="text-4xl font-serif text-white">User management</h2>
+              </div>
+              <div class="rounded-full border border-zinc-700 bg-zinc-950/70 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300">
+                {{ userList.length }} active accounts
+              </div>
+            </div>
+
+            <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+              <div class="rounded-[28px] border border-zinc-800 bg-zinc-950/70 p-6 shadow-2xl shadow-black/30">
+                <div class="mb-5 flex items-center justify-between">
+                  <h3 class="text-xl font-serif text-white">Accounts</h3>
+                  <span class="text-xs uppercase tracking-[0.2em] text-zinc-500">Role access</span>
+                </div>
+
+                <div class="space-y-3">
+                  <div v-if="userLoading" class="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-zinc-400">Loading accounts...</div>
+                  <div v-else v-for="user in userList" :key="user.id" class="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
+                    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <span class="font-medium text-white">{{ user.username }}</span>
+                          <span class="rounded-full border border-zinc-700 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-zinc-300">{{ user.role }}</span>
+                        </div>
+                        <div class="mt-2 text-xs text-zinc-400">Created {{ formatDateValue(user.created_at) }}</div>
+                      </div>
+
+                      <div class="flex flex-wrap items-center gap-2">
+                        <select
+                          :value="user.role"
+                          @change="updateUserRole(user.id, $event.target.value)"
+                          class="rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs uppercase tracking-[0.18em] text-white focus:border-brand-500"
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="editor">Editor</option>
+                          <option value="viewer">Viewer</option>
+                        </select>
+                        <button
+                          type="button"
+                          @click="toggleUserTotp(user)"
+                          class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-zinc-200 hover:border-brand-500 hover:text-brand-400"
+                        >
+                          {{ user.totpEnabled ? 'Disable TOTP' : 'Enable TOTP' }}
+                        </button>
+                        <button
+                          type="button"
+                          @click="deleteUser(user.id)"
+                          :disabled="user.id === currentUserId"
+                          class="rounded-full border border-red-700/70 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-red-300 transition-colors hover:border-red-500 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-[28px] border border-zinc-800 bg-zinc-950/70 p-6 shadow-2xl shadow-black/30">
+                <h3 class="mb-5 text-xl font-serif text-white">Create account</h3>
+
+                <form @submit.prevent="createUserFromAdmin" class="space-y-4">
+                  <div>
+                    <label class="mb-2 block text-sm text-zinc-400">Username</label>
+                    <input v-model="adminUserForm.username" type="text" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" placeholder="Create username" />
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm text-zinc-400">Password</label>
+                    <input v-model="adminUserForm.password" type="password" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white placeholder:text-zinc-500 focus:border-brand-500 transition-colors" placeholder="Minimum 8 characters" />
+                  </div>
+
+                  <div>
+                    <label class="mb-2 block text-sm text-zinc-400">Role</label>
+                    <select v-model="adminUserForm.role" class="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white focus:border-brand-500 transition-colors">
+                      <option value="viewer">Viewer</option>
+                      <option value="editor">Editor</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+
+                  <label class="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-3 text-sm text-zinc-300">
+                    <input v-model="adminUserForm.totpEnabled" type="checkbox" class="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-brand-500 focus:ring-brand-500" />
+                    Require TOTP on sign-in
+                  </label>
+
+                  <button type="submit" class="w-full rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-70" :disabled="adminUserSubmitting">
+                    {{ adminUserSubmitting ? 'Creating...' : 'Create user' }}
+                  </button>
+                </form>
+
+                <p v-if="adminUserMessage" class="mt-4 text-sm text-brand-300">{{ adminUserMessage }}</p>
+                <p v-else-if="adminUserError" class="mt-4 text-sm text-red-400">{{ adminUserError }}</p>
+              </div>
+            </div>
+          </div>
+
           <div v-else class="flex min-h-[560px] items-center justify-center">
             <div class="text-center">
               <p class="mb-3 text-xs uppercase tracking-[0.35em] text-brand-400">{{ tabLabel }}</p>
@@ -334,6 +624,37 @@
             </div>
           </div>
         </main>
+      </div>
+    </div>
+
+    <div v-if="selectedBooking" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+      <div class="w-full max-w-xl rounded-[28px] border border-zinc-800 bg-zinc-900 p-6 shadow-2xl shadow-black/40">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.25em] text-brand-400">Booking notes</p>
+            <h2 class="mt-2 text-2xl font-serif text-white">{{ selectedBooking.name }}</h2>
+          </div>
+          <button type="button" @click="selectedBooking = null" class="rounded-full border border-zinc-700 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-zinc-300 transition-colors hover:border-brand-500 hover:text-brand-400">Close</button>
+        </div>
+
+        <div class="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 text-sm text-zinc-300">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-zinc-400">Type</span>
+            <span class="font-medium text-white">{{ selectedBooking.type }}</span>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-zinc-400">Date</span>
+            <span class="font-medium text-white">{{ formatDateValue(selectedBooking.date) }}</span>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-zinc-400">Guests</span>
+            <span class="font-medium text-white">{{ selectedBooking.guests }}</span>
+          </div>
+          <div class="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3">
+            <p class="mb-2 text-[10px] uppercase tracking-[0.2em] text-zinc-500">Notes</p>
+            <p class="whitespace-pre-wrap text-zinc-200">{{ selectedBooking.notes || 'No additional notes provided.' }}</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -493,6 +814,58 @@ const setupForm = ref({
   totpVerifyPrevious: '',
   totpVerifyCurrent: '',
 })
+const settingsForm = ref({
+  username: '',
+  password: '',
+  confirmPassword: '',
+  totpEnabled: false,
+  totpSecret: '',
+})
+const settingsSaving = ref(false)
+const settingsMessage = ref('')
+const settingsError = ref('')
+const settingsQrDataUrl = ref('')
+const bookingList = ref([])
+const bookingLoading = ref(false)
+const selectedBooking = ref(null)
+const bookingStatusOptions = ['New', 'Contacted', 'Booked', 'Declined']
+const userList = ref([])
+const userLoading = ref(false)
+const currentUserId = ref(null)
+const adminUserForm = ref({ username: '', password: '', role: 'viewer', totpEnabled: false })
+const adminUserSubmitting = ref(false)
+const adminUserMessage = ref('')
+const adminUserError = ref('')
+
+const dashboardCards = computed(() => [
+  { label: 'Menu items', value: String(menuItems.value.length || 12), trend: '+4%', caption: 'Curated dishes currently active', },
+  { label: 'Active Accounts', value: String(userList.value.length || 1), trend: 'Live', caption: 'Operational team accounts connected', },
+  { label: 'Orders today', value: '18', trend: '+12%', caption: 'Incoming orders in the queue', },
+  { label: 'System activity', value: '96%', trend: 'Stable', caption: 'Health score across main workflows', },
+])
+
+const recentBookingsFeed = computed(() => {
+  return [...bookingList.value]
+    .sort((a, b) => new Date(b.created_at || b.date || 0).getTime() - new Date(a.created_at || a.date || 0).getTime())
+    .slice(0, 4)
+})
+
+const trafficChartData = ref([
+  { label: 'Mon', value: 38 },
+  { label: 'Tue', value: 54 },
+  { label: 'Wed', value: 62 },
+  { label: 'Thu', value: 58 },
+  { label: 'Fri', value: 74 },
+  { label: 'Sat', value: 88 },
+  { label: 'Sun', value: 68 },
+])
+
+const topMenuItems = ref([
+  { name: 'Southern Fried Chicken', sales: 42, percentage: 88 },
+  { name: 'Smoked Mac & Cheese', sales: 35, percentage: 74 },
+  { name: 'Catering Platter', sales: 29, percentage: 63 },
+  { name: 'Lemon Herb Salmon', sales: 21, percentage: 48 },
+])
 
 const isReadOnlyUser = computed(() => currentUserRole.value === 'viewer')
 const currentUsername = computed(() => {
@@ -562,6 +935,17 @@ const setupTotpUri = computed(() => {
   return `otpauth://totp/${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`
 })
 
+const settingsTotpUri = computed(() => {
+  const secret = settingsForm.value.totpSecret.trim()
+  if (!settingsForm.value.totpEnabled || !secret) {
+    return ''
+  }
+
+  const label = encodeURIComponent(`Thank Me Later (${settingsForm.value.username.trim() || currentUsername.value || 'Admin'})`)
+  const issuer = encodeURIComponent('Thank Me Later')
+  return `otpauth://totp/${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`
+})
+
 watch(
   setupTotpUri,
   async (uri) => {
@@ -582,6 +966,31 @@ watch(
     } catch (error) {
       console.error('Failed to generate TOTP QR code:', error)
       setupQrDataUrl.value = ''
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  settingsTotpUri,
+  async (uri) => {
+    if (!uri) {
+      settingsQrDataUrl.value = ''
+      return
+    }
+
+    try {
+      settingsQrDataUrl.value = await QRCode.toDataURL(uri, {
+        width: 220,
+        margin: 1,
+        color: {
+          dark: '#f8fafc',
+          light: '#0a0f1d',
+        },
+      })
+    } catch (error) {
+      console.error('Failed to generate settings TOTP QR code:', error)
+      settingsQrDataUrl.value = ''
     }
   },
   { immediate: true },
@@ -649,6 +1058,31 @@ function generateTotpSecret() {
   return secret
 }
 
+async function loadCurrentUserProfile() {
+  const token = sessionStorage.getItem('menu-admin-token')
+  if (!token) {
+    return
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/me`, {
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (!response.ok) {
+      throw new Error('Unable to load profile')
+    }
+
+    const data = await response.json().catch(() => ({}))
+    settingsForm.value.username = data.username || currentUsername.value || ''
+    settingsForm.value.totpEnabled = Boolean(data.totp_enabled || data.totpEnabled)
+    settingsForm.value.totpSecret = data.totp_secret || data.totpSecret || generateTotpSecret()
+  } catch (error) {
+    console.error('Failed to load current user profile:', error)
+  }
+}
+
 function generateRecoveryCodes() {
   const codes = []
   for (let i = 0; i < 8; i += 1) {
@@ -709,6 +1143,59 @@ function authHeaders() {
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+}
+
+function formatDateValue(value) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+}
+
+async function loadBookings() {
+  bookingLoading.value = true
+
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/bookings`, {
+      cache: 'no-store',
+      headers: authHeaders(),
+    })
+
+    if (!response.ok) {
+      throw new Error('Unable to load bookings')
+    }
+
+    const data = await response.json().catch(() => [])
+    bookingList.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('Failed to load bookings:', error)
+    bookingList.value = []
+  } finally {
+    bookingLoading.value = false
+  }
+}
+
+async function loadUsers() {
+  userLoading.value = true
+
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/users`, {
+      cache: 'no-store',
+      headers: authHeaders(),
+    })
+
+    if (!response.ok) {
+      throw new Error('Unable to load users')
+    }
+
+    const data = await response.json().catch(() => [])
+    userList.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('Failed to load users:', error)
+    userList.value = []
+  } finally {
+    userLoading.value = false
   }
 }
 
@@ -1086,7 +1573,7 @@ async function submitTotpLogin() {
   }
 }
 
-function completeSuccessfulLogin() {
+async function completeSuccessfulLogin() {
   accessGranted.value = true
   requiresTotp.value = false
   totpCode.value = ''
@@ -1094,7 +1581,9 @@ function completeSuccessfulLogin() {
   pendingTotpLogin.value = null
   password.value = ''
   resetForm()
-  loadMenuItems()
+  await loadMenuItems()
+  await loadBookings()
+  await loadUsers()
 
   if (shouldShowWelcomeModal()) {
     welcomeModalOpen.value = true
@@ -1153,6 +1642,217 @@ function startEdit(item) {
     title: item.title,
     price: item.price,
     description: item.description,
+  }
+}
+
+async function saveProfileSettings() {
+  settingsMessage.value = ''
+  settingsError.value = ''
+
+  const usernameValue = settingsForm.value.username.trim()
+  const passwordValue = settingsForm.value.password
+  const confirmValue = settingsForm.value.confirmPassword
+
+  if (!usernameValue) {
+    settingsError.value = 'Username is required.'
+    return
+  }
+
+  if (passwordValue || confirmValue) {
+    if (passwordValue.length < 8) {
+      settingsError.value = 'Password must be at least 8 characters long.'
+      return
+    }
+
+    if (passwordValue !== confirmValue) {
+      settingsError.value = 'Passwords do not match.'
+      return
+    }
+  }
+
+  settingsSaving.value = true
+
+  try {
+    const token = sessionStorage.getItem('menu-admin-token')
+    if (!token) {
+      throw new Error('You are not signed in.')
+    }
+
+    const response = await fetch(`${API_BASE}/api/auth/me`, {
+      method: 'PATCH',
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        username: usernameValue,
+        password: passwordValue || undefined,
+        totpEnabled: settingsForm.value.totpEnabled,
+        totpSecret: settingsForm.value.totpSecret || undefined,
+      }),
+    })
+
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      throw new Error(data.error || 'Unable to save profile settings.')
+    }
+
+    if (data.username) {
+      username.value = data.username
+    }
+
+    settingsMessage.value = 'Profile updated successfully.'
+    settingsForm.value.password = ''
+    settingsForm.value.confirmPassword = ''
+    currentUserRole.value = data.role || currentUserRole.value
+    if (data.totpEnabled) {
+      settingsForm.value.totpEnabled = true
+    }
+    if (data.totpSecret) {
+      settingsForm.value.totpSecret = data.totpSecret
+    }
+  } catch (error) {
+    settingsError.value = error.message || 'Unable to save profile settings.'
+  } finally {
+    settingsSaving.value = false
+  }
+}
+
+function toggleTotpSetting() {
+  settingsForm.value.totpEnabled = !settingsForm.value.totpEnabled
+  if (settingsForm.value.totpEnabled && !settingsForm.value.totpSecret) {
+    settingsForm.value.totpSecret = generateTotpSecret()
+  }
+}
+
+async function updateBookingStatus(id, status) {
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/bookings/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ status }),
+    })
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw new Error(data.error || 'Unable to update booking status.')
+    }
+
+    const updated = await response.json().catch(() => null)
+    bookingList.value = bookingList.value.map((item) => (item.id === id ? { ...item, status: updated?.status || status } : item))
+    showToast('Booking status updated.')
+  } catch (error) {
+    showToast(error.message || 'Unable to update booking status.')
+  }
+}
+
+async function updateUserRole(id, role) {
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/users/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ role }),
+    })
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw new Error(data.error || 'Unable to update user role.')
+    }
+
+    userList.value = userList.value.map((user) => (user.id === id ? { ...user, role } : user))
+    if (id === currentUserId.value) {
+      currentUserRole.value = role
+    }
+    showToast('User role updated.')
+  } catch (error) {
+    showToast(error.message || 'Unable to update user role.')
+  }
+}
+
+async function toggleUserTotp(user) {
+  const nextValue = !user.totpEnabled
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/users/${user.id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        totp_enabled: nextValue,
+        totp_secret: user.totp_secret || generateTotpSecret(),
+      }),
+    })
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw new Error(data.error || 'Unable to update TOTP setting.')
+    }
+
+    userList.value = userList.value.map((existing) => existing.id === user.id ? { ...existing, totpEnabled: nextValue, totp_enabled: nextValue ? 1 : 0 } : existing)
+    showToast(nextValue ? 'TOTP enabled.' : 'TOTP disabled.')
+  } catch (error) {
+    showToast(error.message || 'Unable to update TOTP setting.')
+  }
+}
+
+async function createUserFromAdmin() {
+  adminUserError.value = ''
+  adminUserMessage.value = ''
+
+  if (!adminUserForm.value.username.trim() || !adminUserForm.value.password) {
+    adminUserError.value = 'Username and password are required.'
+    return
+  }
+
+  if (adminUserForm.value.password.length < 8) {
+    adminUserError.value = 'Password must be at least 8 characters long.'
+    return
+  }
+
+  adminUserSubmitting.value = true
+
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/users`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        username: adminUserForm.value.username.trim(),
+        password: adminUserForm.value.password,
+        role: adminUserForm.value.role,
+        totp_enabled: adminUserForm.value.totpEnabled,
+      }),
+    })
+
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      throw new Error(data.error || 'Unable to create user.')
+    }
+
+    adminUserMessage.value = 'User created successfully.'
+    adminUserForm.value = { username: '', password: '', role: 'viewer', totpEnabled: false }
+    await loadUsers()
+  } catch (error) {
+    adminUserError.value = error.message || 'Unable to create user.'
+  } finally {
+    adminUserSubmitting.value = false
+  }
+}
+
+async function deleteUser(id) {
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/users/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    })
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw new Error(data.error || 'Unable to delete user.')
+    }
+
+    userList.value = userList.value.filter((user) => user.id !== id)
+    showToast('User deleted.')
+  } catch (error) {
+    showToast(error.message || 'Unable to delete user.')
   }
 }
 
@@ -1240,13 +1940,19 @@ onMounted(async () => {
 
     const meData = await response.json().catch(() => ({}))
     currentUserRole.value = meData.role || 'viewer'
+    currentUserId.value = meData.id || null
     accessGranted.value = true
     activeTab.value = 'dashboard'
     const tokenUsername = currentUsername.value
     if (tokenUsername && tokenUsername !== 'admin') {
       username.value = tokenUsername
     }
-    loadMenuItems()
+    settingsForm.value.username = meData.username || tokenUsername || ''
+    settingsForm.value.totpEnabled = Boolean(meData.totp_enabled || meData.totpEnabled)
+    settingsForm.value.totpSecret = meData.totp_secret || meData.totpSecret || generateTotpSecret()
+    await loadMenuItems()
+    await loadBookings()
+    await loadUsers()
     if (shouldShowWelcomeModal()) {
       welcomeModalOpen.value = true
     }
