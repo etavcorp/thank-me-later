@@ -555,7 +555,7 @@ export async function seedDefaultAdminIfEmpty(env: Env): Promise<void> {
     throw new Error("D1 database binding is missing.");
   }
 
-  const row = await env.DB.prepare("SELECT COUNT(*) AS count FROM users").first<{ count: number }>();
+  const row = await env.DB.prepare("SELECT COUNT(*) AS count FROM users WHERE role = 'admin'").first<{ count: number }>();
   if (row && Number(row.count) > 0) {
     return;
   }
@@ -767,7 +767,7 @@ export default {
       }
 
       if (url.pathname === "/api/auth/setup-status" && request.method === "GET") {
-        const count = await env.DB.prepare("SELECT COUNT(*) AS count FROM users").first<{ count: number }>();
+        const count = await env.DB.prepare("SELECT COUNT(*) AS count FROM users WHERE role = 'admin'").first<{ count: number }>();
         const hasAdmin = Number(count?.count ?? 0) > 0;
         return jsonResponse(
           {
@@ -922,9 +922,9 @@ export default {
             ? body.totp_secret
             : "";
         const totpSecret = rawTotpSecret.trim() ? rawTotpSecret.trim() : null;
-        const totalsCount = await env.DB.prepare("SELECT COUNT(*) AS count FROM users").first<{ count: number }>();
+        const adminCount = await env.DB.prepare("SELECT COUNT(*) AS count FROM users WHERE role = 'admin'").first<{ count: number }>();
 
-        if (Number(totalsCount?.count ?? 0) > 0) {
+        if (Number(adminCount?.count ?? 0) > 0) {
           return jsonResponse({ error: "Admin bootstrap is already complete" }, request, env, { status: 409, headers: { "Cache-Control": "no-store" } });
         }
 
